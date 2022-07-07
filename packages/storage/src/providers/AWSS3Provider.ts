@@ -22,13 +22,16 @@ import {
 	S3Client,
 	GetObjectCommand,
 	DeleteObjectCommand,
-	ListObjectsCommand,
 	GetObjectCommandOutput,
 	DeleteObjectCommandInput,
 	CopyObjectCommandInput,
 	CopyObjectCommand,
 	PutObjectCommandInput,
 	GetObjectCommandInput,
+	paginateListObjectsV2,
+	S3PaginationConfiguration,
+	ListObjectsV2Request,
+	ListObjectsV2CommandOutput,
 } from '@aws-sdk/client-s3';
 import { formatUrl } from '@aws-sdk/util-format-url';
 import { createRequest } from '@aws-sdk/util-create-request';
@@ -72,7 +75,7 @@ import { AWSS3UploadTask, TaskEvents } from './AWSS3UploadTask';
 import { UPLOADS_STORAGE_KEY } from '../common/StorageConstants';
 import * as events from 'events';
 import { CancelTokenSource } from 'axios';
-
+import { Paginator } from '@aws-sdk/types';
 const logger = new Logger('AWSS3Provider');
 
 const DEFAULT_STORAGE_LEVEL = 'public';
@@ -88,6 +91,9 @@ interface AddTaskInput {
 	params?: PutObjectCommandInput;
 }
 
+type PrivateS3ProviderListConfig = S3ProviderListConfig & {
+	continuationToken?: string;
+};
 /**
  * Provide storage methods to use AWS S3
  */
@@ -683,55 +689,49 @@ export class AWSS3Provider implements StorageProvider {
 	 * List bucket objects relative to the level and prefix specified
 	 * @param {string} path - the path that contains objects
 	 * @param {S3ProviderListConfig} [config] - Optional configuration for the underlying S3 command
-	 * @return {Promise<S3ProviderListOutput>} - Promise resolves to list of keys, eTags, lastModified and file size for
+	 * @return {Promise<Paginator<ListObjectsV2CommandOutput>>} - Promise resolves to list of keys, eTags, lastModified and file size for
 	 * all objects in path
 	 */
 	public async list(
 		path: string,
-		config?: S3ProviderListConfig
-	): Promise<S3ProviderListOutput> {
+		config?: PrivateS3ProviderListConfig
+	): Promise<Paginator<ListObjectsV2CommandOutput>> {
 		const credentialsOK = await this._ensureCredentials();
 		if (!credentialsOK || !this._isWithCredentials(this._config)) {
 			throw new Error(StorageErrorStrings.NO_CREDENTIALS);
 		}
 		const opt = Object.assign({}, this._config, config);
-		const { bucket, track, maxKeys } = opt;
-
+		const { bucket, track, maxKeys, continuationToken } = opt;
 		const prefix = this._prefix(opt);
 		const final_path = prefix + path;
 		const s3 = this._createNewS3Client(opt);
 		logger.debug('list ' + path + ' from ' + final_path);
-
-		const params = {
+		const pageSize = maxKeys;
+		const startingToken = continuationToken;
+		const pageParams: S3PaginationConfiguration = {
+			client: s3,
+			pageSize,
+			startingToken,
+		};
+		//const listObjectsCommand = new ListObjectsV2Command(params);
+		const request: ListObjectsV2Request = {
 			Bucket: bucket,
 			Prefix: final_path,
 			MaxKeys: maxKeys,
+			ContinuationToken: continuationToken,
 		};
-
-		const listObjectsCommand = new ListObjectsCommand(params);
-
 		try {
-			const response = await s3.send(listObjectsCommand);
-			let list: S3ProviderListOutput = [];
-			if (response && response.Contents) {
-				list = response.Contents.map(item => {
-					return {
-						key: item.Key.substr(prefix.length),
-						eTag: item.ETag,
-						lastModified: item.LastModified,
-						size: item.Size,
-					};
-				});
-			}
+			const result = paginateListObjectsV2(pageParams, request);
 			dispatchStorageEvent(
 				track,
 				'list',
 				{ method: 'list', result: 'success' },
 				null,
-				`${list.length} items returned from list operation`
+				`${result.next.length} items returned from list operation`
 			);
-			logger.debug('list', list);
-			return list;
+			logger.debug('list', result);
+			//return list;
+			return result;
 		} catch (error) {
 			logger.warn('list error', error);
 			dispatchStorageEvent(
