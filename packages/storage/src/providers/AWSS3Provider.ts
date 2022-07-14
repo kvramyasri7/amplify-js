@@ -22,7 +22,7 @@ import {
 	S3Client,
 	GetObjectCommand,
 	DeleteObjectCommand,
-	ListObjectsCommand,
+	ListObjectsV2Command,
 	GetObjectCommandOutput,
 	DeleteObjectCommandInput,
 	CopyObjectCommandInput,
@@ -695,7 +695,7 @@ export class AWSS3Provider implements StorageProvider {
 			throw new Error(StorageErrorStrings.NO_CREDENTIALS);
 		}
 		const opt = Object.assign({}, this._config, config);
-		const { bucket, track, maxKeys } = opt;
+		const { bucket, track, maxKeys, continuationToken } = opt;
 
 		const prefix = this._prefix(opt);
 		const final_path = prefix + path;
@@ -706,15 +706,17 @@ export class AWSS3Provider implements StorageProvider {
 			Bucket: bucket,
 			Prefix: final_path,
 			MaxKeys: maxKeys,
+			ContinuationToken: continuationToken,
 		};
 
-		const listObjectsCommand = new ListObjectsCommand(params);
+		const listObjectsCommand = new ListObjectsV2Command(params);
 
 		try {
 			const response = await s3.send(listObjectsCommand);
-			let list: S3ProviderListOutput = [];
+			const listItems = {} as S3ProviderListOutput;
+			let listItemsLength;
 			if (response && response.Contents) {
-				list = response.Contents.map(item => {
+				listItems.contents = response.Contents.map(item => {
 					return {
 						key: item.Key.substr(prefix.length),
 						eTag: item.ETag,
@@ -722,16 +724,29 @@ export class AWSS3Provider implements StorageProvider {
 						size: item.Size,
 					};
 				});
+				listItems.isTruncated = response.IsTruncated;
+				if (response.ContinuationToken) {
+					listItems.continuationToken = response.ContinuationToken;
+				}
+				if (response.IsTruncated === true) {
+					listItems.nextContinuationToken = response.NextContinuationToken;
+				}
+				listItemsLength = listItems.contents.length;
+			} else {
+				listItemsLength = 0;
+				listItems.contents = [];
+				listItems.isTruncated = false;
+				listItems.continuationToken = response.ContinuationToken;
 			}
 			dispatchStorageEvent(
 				track,
 				'list',
 				{ method: 'list', result: 'success' },
 				null,
-				`${list.length} items returned from list operation`
+				`${listItemsLength} items returned from list operation`
 			);
-			logger.debug('list', list);
-			return list;
+			logger.debug('list', listItems);
+			return listItems;
 		} catch (error) {
 			logger.warn('list error', error);
 			dispatchStorageEvent(

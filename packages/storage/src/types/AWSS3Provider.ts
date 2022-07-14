@@ -101,6 +101,7 @@ export type S3ProviderListConfig = CommonStorageOptions & {
 	maxKeys?: number;
 	provider?: 'AWSS3';
 	identityId?: string;
+	continuationToken?: string;
 };
 
 export interface S3ProviderListOutputItem {
@@ -110,7 +111,16 @@ export interface S3ProviderListOutputItem {
 	size: ListObjectsCommandOutputContent['Size'];
 }
 
-export type S3ProviderListOutput = S3ProviderListOutputItem[];
+export interface StorageContinuationToken {
+	token: any;
+}
+
+export type S3ProviderListOutput = {
+	contents: S3ProviderListOutputItem[];
+	continuationToken: string;
+	nextContinuationToken: string;
+	isTruncated: boolean;
+};
 
 export interface S3CopyTarget {
 	key: string;
