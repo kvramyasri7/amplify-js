@@ -22,7 +22,7 @@ import {
 	S3Client,
 	GetObjectCommand,
 	DeleteObjectCommand,
-	ListObjectsCommand,
+	ListObjectsV2Command,
 	GetObjectCommandOutput,
 	DeleteObjectCommandInput,
 	CopyObjectCommandInput,
@@ -72,6 +72,7 @@ import { AWSS3UploadTask, TaskEvents } from './AWSS3UploadTask';
 import { UPLOADS_STORAGE_KEY } from '../common/StorageConstants';
 import * as events from 'events';
 import { CancelTokenSource } from 'axios';
+import { Console } from 'console';
 
 const logger = new Logger('AWSS3Provider');
 
@@ -87,6 +88,10 @@ interface AddTaskInput {
 	s3Client: S3Client;
 	params?: PutObjectCommandInput;
 }
+
+type PrivateS3ProviderListConfig = S3ProviderListConfig & {
+	continuationToken?: string;
+};
 
 /**
  * Provide storage methods to use AWS S3
@@ -690,13 +695,19 @@ export class AWSS3Provider implements StorageProvider {
 		path: string,
 		config?: S3ProviderListConfig
 	): Promise<S3ProviderListOutput> {
+		return this._list(path, config);
+	}
+
+	public async _list(
+		path: string,
+		config?: PrivateS3ProviderListConfig
+	): Promise<S3ProviderListOutput> {
 		const credentialsOK = await this._ensureCredentials();
 		if (!credentialsOK || !this._isWithCredentials(this._config)) {
 			throw new Error(StorageErrorStrings.NO_CREDENTIALS);
 		}
 		const opt = Object.assign({}, this._config, config);
-		const { bucket, track, maxKeys } = opt;
-
+		const { bucket, track, maxKeys, continuationToken } = opt;
 		const prefix = this._prefix(opt);
 		const final_path = prefix + path;
 		const s3 = this._createNewS3Client(opt);
@@ -706,15 +717,16 @@ export class AWSS3Provider implements StorageProvider {
 			Bucket: bucket,
 			Prefix: final_path,
 			MaxKeys: maxKeys,
+			ContinuationToken: continuationToken,
 		};
 
-		const listObjectsCommand = new ListObjectsCommand(params);
+		const listObjectsCommand = new ListObjectsV2Command(params);
 
 		try {
 			const response = await s3.send(listObjectsCommand);
-			let list: S3ProviderListOutput = [];
+			const list = new S3ProviderListOutput();
 			if (response && response.Contents) {
-				list = response.Contents.map(item => {
+				const data = response.Contents.map(item => {
 					return {
 						key: item.Key.substr(prefix.length),
 						eTag: item.ETag,
@@ -722,6 +734,21 @@ export class AWSS3Provider implements StorageProvider {
 						size: item.Size,
 					};
 				});
+				data.map(ele => {
+					list.push(ele);
+				});
+				list.hasNextPage = response.IsTruncated;
+				if (response.IsTruncated === true) {
+					const params = {
+						bucket,
+						maxKeys,
+						continuationToken: response.NextContinuationToken,
+					};
+					list.nextPage = () => this.list(path, params);
+				} else {
+					const emptyResult = new S3ProviderListOutput();
+					list.nextPage = () => Promise.resolve(emptyResult);
+				}
 			}
 			dispatchStorageEvent(
 				track,
