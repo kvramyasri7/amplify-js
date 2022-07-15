@@ -678,7 +678,6 @@ export class AWSS3Provider implements StorageProvider {
 			throw error;
 		}
 	}
-
 	/**
 	 * List bucket objects relative to the level and prefix specified
 	 * @param {string} path - the path that contains objects
@@ -706,30 +705,7 @@ export class AWSS3Provider implements StorageProvider {
 			let token;
 			let remainingMaxKeys;
 			if (maxKeys === 'ALL') {
-				const params = {
-					Bucket: bucket,
-					Prefix: final_path,
-					MaxKeys: remainingMaxKeys,
-					ContinuationToken: token,
-				};
-				let tempList: S3ProviderListOutput = [];
-				const listObjectsCommand = new ListObjectsV2Command(params);
-				const response = await s3.send(listObjectsCommand);
-				if (response && response.Contents) {
-					tempList = response.Contents.map(item => {
-						return {
-							key: item.Key.substr(prefix.length),
-							eTag: item.ETag,
-							lastModified: item.LastModified,
-							size: item.Size,
-						};
-					});
-					tempList.map(ele => {
-						list.push(ele);
-					});
-				}
-				token = response.NextContinuationToken;
-				while (token) {
+				do {
 					const params = {
 						Bucket: bucket,
 						Prefix: final_path,
@@ -757,7 +733,7 @@ export class AWSS3Provider implements StorageProvider {
 							token = '';
 						}
 					}
-				}
+				} while (token);
 			} else {
 				if (maxKeys < 1000 || typeof maxKeys === 'string') {
 					remainingMaxKeys = maxKeys;
