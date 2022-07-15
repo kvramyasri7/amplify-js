@@ -22,7 +22,7 @@ import {
 	S3Client,
 	GetObjectCommand,
 	DeleteObjectCommand,
-	ListObjectsCommand,
+	ListObjectsV2Command,
 	GetObjectCommandOutput,
 	DeleteObjectCommandInput,
 	CopyObjectCommandInput,
@@ -67,6 +67,7 @@ import {
 	autoAdjustClockskewMiddlewareOptions,
 	createS3Client,
 } from '../common/S3ClientUtils';
+import { S3ProviderListOutputItem } from '.././types/AWSS3Provider';
 import { AWSS3ProviderManagedUpload } from './AWSS3ProviderManagedUpload';
 import { AWSS3UploadTask, TaskEvents } from './AWSS3UploadTask';
 import { UPLOADS_STORAGE_KEY } from '../common/StorageConstants';
@@ -87,6 +88,10 @@ interface AddTaskInput {
 	s3Client: S3Client;
 	params?: PutObjectCommandInput;
 }
+type S3ProviderListOutputWithToken = {
+	contents: S3ProviderListOutputItem[];
+	nextToken: string;
+};
 
 /**
  * Provide storage methods to use AWS S3
@@ -678,6 +683,26 @@ export class AWSS3Provider implements StorageProvider {
 			throw error;
 		}
 	}
+	private async templist(params: any, opt: any, prefix: any): Promise<any> {
+		let temp: S3ProviderListOutput;
+		let result: S3ProviderListOutputWithToken = { contents: [], nextToken: '' };
+		const s3 = this._createNewS3Client(opt);
+		const listObjectsCommand = new ListObjectsV2Command(params);
+		const response = await s3.send(listObjectsCommand);
+		if (response && response.Contents) {
+			temp = response.Contents.map(item => {
+				return {
+					key: item.Key.substr(prefix.length),
+					eTag: item.ETag,
+					lastModified: item.LastModified,
+					size: item.Size,
+				};
+			});
+			result.nextToken = response.NextContinuationToken;
+		}
+		result.contents = temp;
+		return result;
+	}
 
 	/**
 	 * List bucket objects relative to the level and prefix specified
@@ -701,27 +726,47 @@ export class AWSS3Provider implements StorageProvider {
 		const final_path = prefix + path;
 		const s3 = this._createNewS3Client(opt);
 		logger.debug('list ' + path + ' from ' + final_path);
-
-		const params = {
-			Bucket: bucket,
-			Prefix: final_path,
-			MaxKeys: maxKeys,
-		};
-
-		const listObjectsCommand = new ListObjectsCommand(params);
-
 		try {
-			const response = await s3.send(listObjectsCommand);
 			let list: S3ProviderListOutput = [];
-			if (response && response.Contents) {
-				list = response.Contents.map(item => {
-					return {
-						key: item.Key.substr(prefix.length),
-						eTag: item.ETag,
-						lastModified: item.LastModified,
-						size: item.Size,
-					};
-				});
+			let token;
+			let templist: S3ProviderListOutputWithToken = {
+				contents: [],
+				nextToken: '',
+			};
+			const params = {
+				Bucket: bucket,
+				Prefix: final_path,
+				MaxKeys: maxKeys,
+				ContinuationToken: token,
+			};
+			if (maxKeys === 'ALL') {
+				do {
+					params.ContinuationToken = token;
+					params.MaxKeys = 1000;
+					templist = await this.templist(params, opt, prefix);
+					templist.contents.map(ele => {
+						list.push(ele);
+					});
+					if (templist.nextToken) token = templist.nextToken;
+				} while (templist.nextToken);
+			} else {
+				if (maxKeys < 1000 || typeof maxKeys === 'string') {
+					params.MaxKeys = maxKeys;
+				} else {
+					params.MaxKeys = 1000;
+				}
+				let requestedFiles = maxKeys;
+				while (requestedFiles > 0 || typeof maxKeys === 'string') {
+					params.ContinuationToken = token;
+					templist = await this.templist(params, opt, prefix);
+					templist.contents.map(ele => {
+						list.push(ele);
+					});
+					token = templist.nextToken;
+					if (!token) break;
+					requestedFiles = requestedFiles - 1000;
+					params.MaxKeys = requestedFiles;
+				}
 			}
 			dispatchStorageEvent(
 				track,
