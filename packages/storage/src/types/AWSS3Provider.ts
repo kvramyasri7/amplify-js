@@ -110,10 +110,11 @@ export interface S3ProviderListOutputItem {
 	size: ListObjectsCommandOutputContent['Size'];
 }
 
-export class S3ProviderListOutput extends Array<S3ProviderListOutputItem> {
+export type S3ProviderListOutput = {
+	contents: S3ProviderListOutputItem[];
 	hasNextPage: boolean;
 	nextPage: () => Promise<S3ProviderListOutput>;
-}
+};
 
 export interface S3CopyTarget {
 	key: string;

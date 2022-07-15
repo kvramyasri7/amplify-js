@@ -955,8 +955,12 @@ describe('StorageProvider test', () => {
 
 	describe('list test', () => {
 		test('list object successfully', async () => {
-			const result = new S3ProviderListOutput();
-			result.push({
+			let result: S3ProviderListOutput = {
+				contents: [],
+				hasNextPage: false,
+				nextPage: null,
+			};
+			result.contents.push({
 				key: 'path/itemsKey',
 				eTag: 'etag',
 				lastModified: new Date(
@@ -965,7 +969,7 @@ describe('StorageProvider test', () => {
 				size: 10,
 			});
 			result.hasNextPage = false;
-			const emptyResult = new S3ProviderListOutput();
+			let emptyResult: S3ProviderListOutput;
 			result.nextPage = () => Promise.resolve(emptyResult);
 			jest.spyOn(Credentials, 'get').mockImplementationOnce(() => {
 				return new Promise((res, rej) => {
@@ -978,7 +982,7 @@ describe('StorageProvider test', () => {
 			const spyon = jest.spyOn(S3Client.prototype, 'send');
 			const fromApi = await storage.list('path', { level: 'public' });
 			expect.assertions(4);
-			expect([...fromApi]).toEqual([...result]);
+			expect(fromApi.contents).toEqual(result.contents);
 			expect(fromApi.hasNextPage).toEqual(result.hasNextPage);
 			expect(fromApi.nextPage).toEqual(expect.any(Function));
 			expect(spyon.mock.calls[0][0].input).toEqual({
@@ -994,13 +998,18 @@ describe('StorageProvider test', () => {
 					res({});
 				});
 			});
+			let result: S3ProviderListOutput = {
+				contents: [],
+				hasNextPage: false,
+				nextPage: null,
+			};
 			const storage = new StorageProvider();
 			storage.configure(options);
 			const spyon = jest.spyOn(S3Client.prototype, 'send');
 			expect.assertions(2);
 			expect(
 				await storage.list('emptyListResultsPath', { level: 'public' })
-			).toEqual([]);
+			).toEqual(result);
 			expect(spyon.mock.calls[0][0].input).toEqual({
 				Bucket: 'bucket',
 				Prefix: 'public/emptyListResultsPath',
@@ -1019,8 +1028,12 @@ describe('StorageProvider test', () => {
 			storage.configure(options);
 			const spyon = jest.spyOn(S3Client.prototype, 'send');
 			const spyon2 = jest.spyOn(Hub, 'dispatch');
-			const result = new S3ProviderListOutput();
-			result.push({
+			let result: S3ProviderListOutput = {
+				contents: [],
+				hasNextPage: false,
+				nextPage: null,
+			};
+			result.contents.push({
 				key: 'path/itemsKey',
 				eTag: 'etag',
 				lastModified: new Date(
@@ -1029,14 +1042,14 @@ describe('StorageProvider test', () => {
 				size: 10,
 			});
 			result.hasNextPage = false;
-			const emptyResult = new S3ProviderListOutput();
+			let emptyResult: S3ProviderListOutput;
 			result.nextPage = () => Promise.resolve(emptyResult);
 			const fromApi = await storage.list('path', {
 				level: 'public',
 				track: true,
 			});
 			expect.assertions(5);
-			expect([...fromApi]).toEqual([...result]);
+			expect([fromApi.contents]).toEqual([result.contents]);
 			expect(fromApi.hasNextPage).toEqual(result.hasNextPage);
 			expect(fromApi.nextPage).toEqual(expect.any(Function));
 			expect(spyon.mock.calls[0][0].input).toEqual({
@@ -1065,8 +1078,12 @@ describe('StorageProvider test', () => {
 						res({});
 					});
 				});
-			const result = new S3ProviderListOutput();
-			result.push({
+			let result: S3ProviderListOutput = {
+				contents: [],
+				hasNextPage: false,
+				nextPage: null,
+			};
+			result.contents.push({
 				key: 'path/itemsKey',
 				eTag: 'etag',
 				lastModified: new Date(
@@ -1075,7 +1092,7 @@ describe('StorageProvider test', () => {
 				size: 10,
 			});
 			result.hasNextPage = false;
-			const emptyResult = new S3ProviderListOutput();
+			let emptyResult: S3ProviderListOutput;
 			result.nextPage = () => Promise.resolve(emptyResult);
 			const storage = new StorageProvider();
 			storage.configure(options);
@@ -1086,7 +1103,7 @@ describe('StorageProvider test', () => {
 				maxKeys: 1,
 			});
 			expect.assertions(4);
-			expect([...fromApi]).toEqual([...result]);
+			expect([fromApi.contents]).toEqual([result.contents]);
 			expect(fromApi.hasNextPage).toEqual(result.hasNextPage);
 			expect(fromApi.nextPage).toEqual(expect.any(Function));
 			expect(spyon.mock.calls[0][0].input).toEqual({
@@ -1130,8 +1147,12 @@ describe('StorageProvider test', () => {
 						res({});
 					});
 				});
-			const result = new S3ProviderListOutput();
-			result.push({
+			let result: S3ProviderListOutput = {
+				contents: [],
+				hasNextPage: false,
+				nextPage: null,
+			};
+			result.contents.push({
 				key: 'path/itemsKey',
 				eTag: 'etag',
 				lastModified: new Date(
@@ -1140,7 +1161,7 @@ describe('StorageProvider test', () => {
 				size: 10,
 			});
 			result.hasNextPage = true;
-			const empty = new S3ProviderListOutput();
+			let empty: S3ProviderListOutput;
 			result.nextPage = () => Promise.resolve(empty);
 			const storage = new StorageProvider();
 			storage.configure(options);
@@ -1151,7 +1172,7 @@ describe('StorageProvider test', () => {
 				maxKeys: 1,
 			});
 			expect.assertions(4);
-			expect([...fromApi]).toEqual([...result]);
+			expect([fromApi.contents]).toEqual([result.contents]);
 			expect(fromApi.hasNextPage).toEqual(result.hasNextPage);
 			expect(fromApi.nextPage).toEqual(expect.any(Function));
 			expect(spyon.mock.calls[0][0].input).toEqual({

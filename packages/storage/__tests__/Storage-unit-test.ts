@@ -1,6 +1,10 @@
 import AWSStorageProvider from '../src/providers/AWSS3Provider';
 import { Storage as StorageClass } from '../src/Storage';
-import { Storage as StorageCategory, StorageProvider } from '../src';
+import {
+	Storage as StorageCategory,
+	StorageProvider,
+	S3ProviderListOutput,
+} from '../src';
 import axios, { CancelToken } from 'axios';
 import { AWSS3UploadTask } from '../src/providers/AWSS3UploadTask';
 import { S3Client } from '@aws-sdk/client-s3';
@@ -55,8 +59,10 @@ class TestCustomProvider implements StorageProvider {
 	}
 }
 
-class TestCustomProviderWithCopy extends TestCustomProvider
-	implements StorageProvider {
+class TestCustomProviderWithCopy
+	extends TestCustomProvider
+	implements StorageProvider
+{
 	copy(
 		src: { key: string },
 		dest: { key: string },
@@ -794,7 +800,7 @@ describe('Storage', () => {
 		let storage: StorageClass;
 		let provider: StorageProvider;
 		let listSpy: jest.SpyInstance;
-
+		let output: S3ProviderListOutput;
 		beforeEach(() => {
 			storage = new StorageClass();
 			provider = new AWSStorageProvider();
@@ -802,7 +808,7 @@ describe('Storage', () => {
 			storage.configure(options);
 			listSpy = jest
 				.spyOn(AWSStorageProvider.prototype, 'list')
-				.mockImplementation(() => Promise.resolve([]));
+				.mockImplementation(() => Promise.resolve(output));
 		});
 
 		afterEach(() => {
@@ -970,7 +976,7 @@ describe('Storage', () => {
 				.spyOn(axios.CancelToken, 'source')
 				.mockImplementation(() => {
 					return {
-						token: (tokenMock as unknown) as CancelToken,
+						token: tokenMock as unknown as CancelToken,
 						cancel: cancelMock,
 					};
 				});

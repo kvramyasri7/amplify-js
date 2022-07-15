@@ -724,7 +724,11 @@ export class AWSS3Provider implements StorageProvider {
 
 		try {
 			const response = await s3.send(listObjectsCommand);
-			const list = new S3ProviderListOutput();
+			const list: S3ProviderListOutput = {
+				contents: [],
+				hasNextPage: false,
+				nextPage: null,
+			};
 			if (response && response.Contents) {
 				const data = response.Contents.map(item => {
 					return {
@@ -735,7 +739,7 @@ export class AWSS3Provider implements StorageProvider {
 					};
 				});
 				data.map(ele => {
-					list.push(ele);
+					list.contents.push(ele);
 				});
 				list.hasNextPage = response.IsTruncated;
 				if (response.IsTruncated === true) {
@@ -746,8 +750,7 @@ export class AWSS3Provider implements StorageProvider {
 					};
 					list.nextPage = () => this.list(path, params);
 				} else {
-					const emptyResult = new S3ProviderListOutput();
-					list.nextPage = () => Promise.resolve(emptyResult);
+					list.nextPage = () => Promise.resolve(list);
 				}
 			}
 			dispatchStorageEvent(
@@ -755,7 +758,7 @@ export class AWSS3Provider implements StorageProvider {
 				'list',
 				{ method: 'list', result: 'success' },
 				null,
-				`${list.length} items returned from list operation`
+				`${list.contents.length} items returned from list operation`
 			);
 			logger.debug('list', list);
 			return list;
