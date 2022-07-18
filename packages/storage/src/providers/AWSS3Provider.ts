@@ -685,7 +685,10 @@ export class AWSS3Provider implements StorageProvider {
 	}
 	private async templist(params: any, opt: any, prefix: any): Promise<any> {
 		let temp: S3ProviderListOutput;
-		let result: S3ProviderListOutputWithToken = { contents: [], nextToken: '' };
+		const result: S3ProviderListOutputWithToken = {
+			contents: [],
+			nextToken: '',
+		};
 		const s3 = this._createNewS3Client(opt);
 		const listObjectsCommand = new ListObjectsV2Command(params);
 		const response = await s3.send(listObjectsCommand);
@@ -727,7 +730,7 @@ export class AWSS3Provider implements StorageProvider {
 		const s3 = this._createNewS3Client(opt);
 		logger.debug('list ' + path + ' from ' + final_path);
 		try {
-			let list: S3ProviderListOutput = [];
+			const list: S3ProviderListOutput = [];
 			let token;
 			let templist: S3ProviderListOutputWithToken = {
 				contents: [],
