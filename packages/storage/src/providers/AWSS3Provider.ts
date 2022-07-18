@@ -683,8 +683,7 @@ export class AWSS3Provider implements StorageProvider {
 			throw error;
 		}
 	}
-	private async templist(params: any, opt: any, prefix: any): Promise<any> {
-		let temp: S3ProviderListOutput;
+	private async _list(params: any, opt: any, prefix: any): Promise<any> {
 		const result: S3ProviderListOutputWithToken = {
 			contents: [],
 			nextToken: '',
@@ -693,7 +692,7 @@ export class AWSS3Provider implements StorageProvider {
 		const listObjectsCommand = new ListObjectsV2Command(params);
 		const response = await s3.send(listObjectsCommand);
 		if (response && response.Contents) {
-			temp = response.Contents.map(item => {
+			result.contents = response.Contents.map(item => {
 				return {
 					key: item.Key.substr(prefix.length),
 					eTag: item.ETag,
@@ -703,7 +702,6 @@ export class AWSS3Provider implements StorageProvider {
 			});
 			result.nextToken = response.NextContinuationToken;
 		}
-		result.contents = temp;
 		return result;
 	}
 
@@ -746,7 +744,7 @@ export class AWSS3Provider implements StorageProvider {
 				do {
 					params.ContinuationToken = token;
 					params.MaxKeys = 1000;
-					templist = await this.templist(params, opt, prefix);
+					templist = await this._list(params, opt, prefix);
 					templist.contents.map(ele => {
 						list.push(ele);
 					});
@@ -756,18 +754,10 @@ export class AWSS3Provider implements StorageProvider {
 				maxKeys < 1000 || typeof maxKeys === 'string'
 					? (params.MaxKeys = maxKeys)
 					: (params.MaxKeys = 1000);
-				let requestedFiles: number = maxKeys;
-				while (requestedFiles > 0 || typeof maxKeys === 'string') {
-					params.ContinuationToken = token;
-					templist = await this.templist(params, opt, prefix);
-					templist.contents.map(ele => {
-						list.push(ele);
-					});
-					token = templist.nextToken;
-					if (!token) break;
-					requestedFiles = requestedFiles - 1000;
-					params.MaxKeys = requestedFiles;
-				}
+				templist = await this._list(params, opt, prefix);
+				templist.contents.map(ele => {
+					list.push(ele);
+				});
 			}
 			dispatchStorageEvent(
 				track,
