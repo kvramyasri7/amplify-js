@@ -730,7 +730,7 @@ export class AWSS3Provider implements StorageProvider {
 		try {
 			const list: S3ProviderListOutput = [];
 			let token;
-			let templist: S3ProviderListOutputWithToken = {
+			let _list: S3ProviderListOutputWithToken = {
 				contents: [],
 				nextToken: '',
 			};
@@ -744,18 +744,18 @@ export class AWSS3Provider implements StorageProvider {
 				do {
 					params.ContinuationToken = token;
 					params.MaxKeys = 1000;
-					templist = await this._list(params, opt, prefix);
-					templist.contents.map(ele => {
+					_list = await this._list(params, opt, prefix);
+					_list.contents.map(ele => {
 						list.push(ele);
 					});
-					if (templist.nextToken) token = templist.nextToken;
-				} while (templist.nextToken);
+					if (_list.nextToken) token = _list.nextToken;
+				} while (_list.nextToken);
 			} else {
 				maxKeys < 1000 || typeof maxKeys === 'string'
 					? (params.MaxKeys = maxKeys)
 					: (params.MaxKeys = 1000);
-				templist = await this._list(params, opt, prefix);
-				templist.contents.map(ele => {
+				_list = await this._list(params, opt, prefix);
+				_list.contents.map(ele => {
 					list.push(ele);
 				});
 			}
