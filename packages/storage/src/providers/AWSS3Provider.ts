@@ -729,12 +729,11 @@ export class AWSS3Provider implements StorageProvider {
 
 		const prefix = this._prefix(opt);
 		const final_path = prefix + path;
-		const s3 = this._createNewS3Client(opt);
 		logger.debug('list ' + path + ' from ' + final_path);
 		try {
 			const list: S3ProviderListOutput = [];
 			let token;
-			let _list: S3ProviderListOutputWithToken = {
+			let listResult: S3ProviderListOutputWithToken = {
 				contents: [],
 				nextToken: '',
 			};
@@ -748,18 +747,18 @@ export class AWSS3Provider implements StorageProvider {
 				do {
 					params.ContinuationToken = token;
 					params.MaxKeys = 1000;
-					_list = await this._list(params, opt, prefix);
-					_list.contents.map(ele => {
+					listResult = await this._list(params, opt, prefix);
+					listResult.contents.map(ele => {
 						list.push(ele);
 					});
-					if (_list.nextToken) token = _list.nextToken;
-				} while (_list.nextToken);
+					if (listResult.nextToken) token = listResult.nextToken;
+				} while (listResult.nextToken);
 			} else {
 				maxKeys < 1000 || typeof maxKeys === 'string'
 					? (params.MaxKeys = maxKeys)
 					: (params.MaxKeys = 1000);
-				_list = await this._list(params, opt, prefix);
-				_list.contents.map(ele => {
+				listResult = await this._list(params, opt, prefix);
+				listResult.contents.map(ele => {
 					list.push(ele);
 				});
 			}
