@@ -97,7 +97,9 @@ export type S3ProviderRemoveConfig = CommonStorageOptions & {
 
 export type S3ProviderListOutputWithToken = {
 	contents: S3ProviderListOutputItem[];
-	nextToken: string;
+	nextToken?: string;
+	currentToken?: string;
+	hasNextPage: boolean;
 };
 
 export type S3ProviderRemoveOutput = DeleteObjectCommandOutput;
@@ -107,8 +109,9 @@ export type S3ProviderListConfig = CommonStorageOptions & {
 	maxKeys?: number | 'ALL';
 	provider?: 'AWSS3';
 	identityId?: string;
+	token?: S3ContinuationToken;
 };
-
+export type S3ContinuationToken = string;
 export type NewS3ClientOptions = StorageOptions & {
 	credentials: ICredentials;
 } & S3ProviderListConfig;

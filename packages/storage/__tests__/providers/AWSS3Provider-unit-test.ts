@@ -60,6 +60,9 @@ S3Client.prototype.send = jest.fn(async command => {
 					Size: 'size',
 				},
 			],
+			IsTruncated: true,
+			ContinuationTone: null,
+			nextContinuationToken: null,
 		};
 	}
 	return 'data';
@@ -961,8 +964,9 @@ describe('StorageProvider test', () => {
 			storage.configure(options);
 			const spyon = jest.spyOn(S3Client.prototype, 'send');
 
-			expect.assertions(2);
-			expect(await storage.list('path', { level: 'public' })).toEqual([
+			expect.assertions(4);
+			let result = await storage.list('path', { level: 'public' });
+			expect(result.contents).toEqual([
 				{
 					eTag: 'etag',
 					key: 'path/itemsKey',
@@ -970,6 +974,8 @@ describe('StorageProvider test', () => {
 					size: 'size',
 				},
 			]);
+			expect(result.nextToken).toEqual(null);
+			expect(result.currentToken).toEqual(null);
 			expect(spyon.mock.calls[0][0].input).toEqual({
 				Bucket: 'bucket',
 				ContinuationToken: undefined,
@@ -991,9 +997,10 @@ describe('StorageProvider test', () => {
 			const spyon = jest.spyOn(S3Client.prototype, 'send');
 
 			expect.assertions(2);
-			expect(
-				await storage.list('emptyListResultsPath', { level: 'public' })
-			).toEqual([]);
+			let result = await storage.list('emptyListResultsPath', {
+				level: 'public',
+			});
+			expect(result.contents).toEqual([]);
 			expect(spyon.mock.calls[0][0].input).toEqual({
 				Bucket: 'bucket',
 				ContinuationToken: undefined,
@@ -1016,9 +1023,11 @@ describe('StorageProvider test', () => {
 			const spyon2 = jest.spyOn(Hub, 'dispatch');
 
 			expect.assertions(3);
-			expect(
-				await storage.list('path', { level: 'public', track: true })
-			).toEqual([
+			const result = await await storage.list('path', {
+				level: 'public',
+				track: true,
+			});
+			expect(result.contents).toEqual([
 				{
 					eTag: 'etag',
 					key: 'path/itemsKey',
@@ -1058,10 +1067,12 @@ describe('StorageProvider test', () => {
 			const storage = new StorageProvider();
 			storage.configure(options);
 			const spyon = jest.spyOn(S3Client.prototype, 'send');
-			expect.assertions(2);
-			expect(
-				await storage.list('path', { level: 'public', maxKeys: 1 })
-			).toEqual([
+			expect.assertions(4);
+			const result = await storage.list('path', {
+				level: 'public',
+				maxKeys: 1,
+			});
+			expect(result.contents).toEqual([
 				{
 					eTag: 'etag',
 					key: 'path/itemsKey',
@@ -1069,6 +1080,8 @@ describe('StorageProvider test', () => {
 					size: 'size',
 				},
 			]);
+			expect(result.currentToken).toEqual(null);
+			expect(result.nextToken).toEqual(null);
 			expect(spyon.mock.calls[0][0].input).toEqual({
 				Bucket: 'bucket',
 				Prefix: 'public/path',
@@ -1092,10 +1105,12 @@ describe('StorageProvider test', () => {
 			const storage = new StorageProvider();
 			storage.configure(options);
 			const spyon = jest.spyOn(S3Client.prototype, 'send');
-			expect.assertions(2);
-			expect(
-				await storage.list('path', { level: 'public', maxKeys: 'ALL' })
-			).toEqual([
+			expect.assertions(4);
+			const result = await storage.list('path', {
+				level: 'public',
+				maxKeys: 'ALL',
+			});
+			expect(result.contents).toEqual([
 				{
 					eTag: 'etag',
 					key: 'path/itemsKey',
@@ -1103,6 +1118,46 @@ describe('StorageProvider test', () => {
 					size: 'size',
 				},
 			]);
+			expect(result.currentToken).toEqual(undefined);
+			expect(result.nextToken).toEqual(undefined);
+			expect(spyon.mock.calls[0][0].input).toEqual({
+				Bucket: 'bucket',
+				Prefix: 'public/path',
+				ContinuationToken: undefined,
+				MaxKeys: 1000,
+			});
+
+			spyon.mockClear();
+			curCredSpyOn.mockClear();
+		});
+
+		test('list object with nextToken', async () => {
+			const curCredSpyOn = jest
+				.spyOn(Credentials, 'get')
+				.mockImplementationOnce(() => {
+					return new Promise((res, rej) => {
+						res({});
+					});
+				});
+
+			const storage = new StorageProvider();
+			storage.configure(options);
+			const spyon = jest.spyOn(S3Client.prototype, 'send');
+			expect.assertions(4);
+			const result = await storage.list('path', {
+				level: 'public',
+				maxKeys: 'ALL',
+			});
+			expect(result.contents).toEqual([
+				{
+					eTag: 'etag',
+					key: 'path/itemsKey',
+					lastModified: 'lastmodified',
+					size: 'size',
+				},
+			]);
+			expect(result.currentToken).toEqual(undefined);
+			expect(result.nextToken).toEqual(undefined);
 			expect(spyon.mock.calls[0][0].input).toEqual({
 				Bucket: 'bucket',
 				Prefix: 'public/path',

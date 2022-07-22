@@ -35,7 +35,7 @@ const testOpts: any = {
 
 let mockLocalStorageItems = {};
 
-const mockLocalStorage = ({
+const mockLocalStorage = {
 	getItem: jest.fn().mockImplementation(key => mockLocalStorageItems[key]),
 	setItem: jest.fn().mockImplementation((key, value) => {
 		mockLocalStorageItems[key] = value;
@@ -46,7 +46,7 @@ const mockLocalStorage = ({
 	removeItem: jest.fn().mockImplementation(key => {
 		mockLocalStorageItems[key] = undefined;
 	}),
-} as unknown) as Storage;
+} as unknown as Storage;
 
 describe('resumable upload task test', () => {
 	afterEach(() => {
@@ -111,7 +111,7 @@ describe('resumable upload task test', () => {
 		expect(cancelled).toBe(true);
 		uploadTask._cancel().then(cancelled => {
 			expect(uploadTask.state).toEqual(AWSS3UploadTaskState.CANCELLED);
-			expect(cancelled).toBe(true);
+			expect(cancelled).toBe(!true);
 		});
 	});
 

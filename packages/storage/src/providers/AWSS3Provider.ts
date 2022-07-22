@@ -689,6 +689,8 @@ export class AWSS3Provider implements StorageProvider {
 		const result: S3ProviderListOutputWithToken = {
 			contents: [],
 			nextToken: '',
+			currentToken: '',
+			hasNextPage: false,
 		};
 		const s3 = this._createNewS3Client(opt);
 		const listObjectsV2Command = new ListObjectsV2Command(params);
@@ -702,7 +704,10 @@ export class AWSS3Provider implements StorageProvider {
 					size: item.Size,
 				};
 			});
-			result.nextToken = response.NextContinuationToken;
+			result.currentToken = response.ContinuationToken;
+			if (response.IsTruncated)
+				result.nextToken = response.NextContinuationToken;
+			result.hasNextPage = response.IsTruncated;
 		}
 		return result;
 	}
@@ -711,26 +716,29 @@ export class AWSS3Provider implements StorageProvider {
 	 * List bucket objects relative to the level and prefix specified
 	 * @param {string} path - the path that contains objects
 	 * @param {S3ProviderListConfig} [config] - Optional configuration for the underlying S3 command
-	 * @return {Promise<S3ProviderListOutput>} - Promise resolves to list of keys, eTags, lastModified and file size for
-	 * all objects in path
+	 * @return {Promise<S3ProviderListOutputWithToken>} - Promise resolves to list of keys, eTags, lastModified
+	 * and file size for all objects in path
 	 */
 	public async list(
 		path: string,
 		config?: S3ProviderListConfig
-	): Promise<S3ProviderListOutput> {
+	): Promise<S3ProviderListOutputWithToken> {
 		const credentialsOK = await this._ensureCredentials();
 		if (!credentialsOK || !this._isWithCredentials(this._config)) {
 			throw new Error(StorageErrorStrings.NO_CREDENTIALS);
 		}
 		const opt: NewS3ClientOptions = Object.assign({}, this._config, config);
-		const { bucket, track, maxKeys } = opt;
+		const { bucket, track, maxKeys, token } = opt;
 
 		const prefix = this._prefix(opt);
 		const final_path = prefix + path;
 		logger.debug('list ' + path + ' from ' + final_path);
 		try {
-			const list: S3ProviderListOutput = [];
-			let token: string;
+			const list: S3ProviderListOutputWithToken = {
+				contents: [],
+				hasNextPage: false,
+			};
+			let continuationToken: string = token;
 			let listResult: S3ProviderListOutputWithToken;
 			const params: ListObjectsV2Request = {
 				Bucket: bucket,
@@ -740,18 +748,25 @@ export class AWSS3Provider implements StorageProvider {
 			};
 			if (maxKeys === 'ALL') {
 				do {
-					params.ContinuationToken = token;
+					params.ContinuationToken = continuationToken;
 					params.MaxKeys = 1000;
 					listResult = await this._list(params, opt, prefix);
-					list.push(...listResult.contents);
-					if (listResult.nextToken) token = listResult.nextToken;
+					list.contents.push(...listResult.contents);
+					if (listResult.nextToken) continuationToken = listResult.nextToken;
 				} while (listResult.nextToken);
 			} else {
 				maxKeys < 1000 || typeof maxKeys === 'string'
 					? (params.MaxKeys = maxKeys)
 					: (params.MaxKeys = 1000);
 				listResult = await this._list(params, opt, prefix);
-				list.push(...listResult.contents);
+				list.contents.push(...listResult.contents);
+				list.hasNextPage = listResult.hasNextPage;
+				listResult.currentToken
+					? (list.currentToken = listResult.currentToken)
+					: (list.currentToken = null);
+				listResult.nextToken
+					? (list.nextToken = listResult.nextToken)
+					: (list.nextToken = null);
 				if (maxKeys > 1000)
 					logger.warn(
 						"makeys can be from 0 - 1000 or 'ALL'. To list all files you can set maxKeys to 'ALL'."
@@ -762,7 +777,7 @@ export class AWSS3Provider implements StorageProvider {
 				'list',
 				{ method: 'list', result: 'success' },
 				null,
-				`${list.length} items returned from list operation`
+				`${list.contents.length} items returned from list operation`
 			);
 			logger.debug('list', list);
 			return list;
