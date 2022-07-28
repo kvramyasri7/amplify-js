@@ -97,8 +97,7 @@ export type S3ProviderRemoveConfig = CommonStorageOptions & {
 
 export type S3ProviderListOutputWithToken = {
 	contents: S3ProviderListOutputItem[];
-	nextToken?: string;
-	currentToken?: string;
+	nextPageToken?: string;
 	hasNextPage: boolean;
 };
 
@@ -109,7 +108,7 @@ export type S3ProviderListConfig = CommonStorageOptions & {
 	maxKeys?: number | 'ALL';
 	provider?: 'AWSS3';
 	identityId?: string;
-	token?: S3ContinuationToken;
+	pageToken?: S3ContinuationToken;
 };
 export type S3ContinuationToken = string;
 export type NewS3ClientOptions = StorageOptions & {

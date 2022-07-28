@@ -688,8 +688,7 @@ export class AWSS3Provider implements StorageProvider {
 	): Promise<S3ProviderListOutputWithToken> {
 		const result: S3ProviderListOutputWithToken = {
 			contents: [],
-			nextToken: '',
-			currentToken: '',
+			nextPageToken: '',
 			hasNextPage: false,
 		};
 		const s3 = this._createNewS3Client(opt);
@@ -704,9 +703,7 @@ export class AWSS3Provider implements StorageProvider {
 					size: item.Size,
 				};
 			});
-			result.currentToken = response.ContinuationToken;
-			if (response.IsTruncated)
-				result.nextToken = response.NextContinuationToken;
+			result.nextPageToken = response.NextContinuationToken;
 			result.hasNextPage = response.IsTruncated;
 		}
 		return result;
@@ -728,7 +725,7 @@ export class AWSS3Provider implements StorageProvider {
 			throw new Error(StorageErrorStrings.NO_CREDENTIALS);
 		}
 		const opt: NewS3ClientOptions = Object.assign({}, this._config, config);
-		const { bucket, track, maxKeys, token } = opt;
+		const { bucket, track, maxKeys, pageToken } = opt;
 
 		const prefix = this._prefix(opt);
 		const final_path = prefix + path;
@@ -738,13 +735,13 @@ export class AWSS3Provider implements StorageProvider {
 				contents: [],
 				hasNextPage: false,
 			};
-			let continuationToken: string = token;
+			let continuationToken: string = pageToken;
 			let listResult: S3ProviderListOutputWithToken;
 			const params: ListObjectsV2Request = {
 				Bucket: bucket,
 				Prefix: final_path,
 				MaxKeys: 1000,
-				ContinuationToken: token,
+				ContinuationToken: pageToken,
 			};
 			if (maxKeys === 'ALL') {
 				do {
@@ -752,8 +749,9 @@ export class AWSS3Provider implements StorageProvider {
 					params.MaxKeys = 1000;
 					listResult = await this._list(params, opt, prefix);
 					list.contents.push(...listResult.contents);
-					if (listResult.nextToken) continuationToken = listResult.nextToken;
-				} while (listResult.nextToken);
+					if (listResult.nextPageToken)
+						continuationToken = listResult.nextPageToken;
+				} while (listResult.nextPageToken);
 			} else {
 				maxKeys < 1000 || typeof maxKeys === 'string'
 					? (params.MaxKeys = maxKeys)
@@ -761,12 +759,9 @@ export class AWSS3Provider implements StorageProvider {
 				listResult = await this._list(params, opt, prefix);
 				list.contents.push(...listResult.contents);
 				list.hasNextPage = listResult.hasNextPage;
-				listResult.currentToken
-					? (list.currentToken = listResult.currentToken)
-					: (list.currentToken = null);
-				listResult.nextToken
-					? (list.nextToken = listResult.nextToken)
-					: (list.nextToken = null);
+				listResult.nextPageToken
+					? (list.nextPageToken = listResult.nextPageToken)
+					: (list.nextPageToken = null);
 				if (maxKeys > 1000)
 					logger.warn(
 						"makeys can be from 0 - 1000 or 'ALL'. To list all files you can set maxKeys to 'ALL'."
