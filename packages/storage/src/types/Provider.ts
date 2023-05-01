@@ -34,6 +34,8 @@ export interface StorageProvider {
 
 	// return the name of you provider
 	getProviderName(): string;
+
+	getProperties(key: string, options?): Promise<Object>;
 }
 
 export interface UploadTask {
@@ -52,4 +54,10 @@ export interface StorageProviderWithCopy extends StorageProvider {
 	): Promise<any>;
 }
 
-export type StorageProviderApi = 'copy' | 'get' | 'put' | 'remove' | 'list';
+export type StorageProviderApi =
+	| 'copy'
+	| 'get'
+	| 'put'
+	| 'remove'
+	| 'list'
+	| 'getProperties';

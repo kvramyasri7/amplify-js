@@ -5,6 +5,8 @@ import {
 	CopyObjectRequest,
 	_Object,
 	DeleteObjectCommandOutput,
+	HeadObjectRequest,
+	HeadObjectCommandOutput,
 } from '@aws-sdk/client-s3';
 import { StorageOptions, StorageAccessLevel } from './Storage';
 import {
@@ -49,6 +51,12 @@ export type S3ProviderGetConfig = CommonStorageOptions & {
 	SSECustomerKey?: GetObjectRequest['SSECustomerKey'];
 	SSECustomerKeyMD5?: GetObjectRequest['SSECustomerKeyMD5'];
 	validateObjectExistence?: boolean;
+};
+
+export type S3ProviderGetPropertiesConfig = CommonStorageOptions & {
+	SSECustomerKey?: HeadObjectRequest['SSECustomerKey'];
+	SSECustomerKeyMD5?: HeadObjectRequest['SSECustomerKeyMD5'];
+	SSECustomerAlgorithm?: HeadObjectRequest['SSECustomerAlgorithm'];
 };
 
 export type S3ProviderGetOuput<T> = T extends { download: true }
@@ -100,6 +108,15 @@ export type S3ProviderListOutput = {
 	results: S3ProviderListOutputItem[];
 	nextToken?: string;
 	hasNextToken: boolean;
+};
+
+export type S3ProviderGetPropertiesOutput = {
+	eTag: HeadObjectCommandOutput['ETag'];
+	lastModified: HeadObjectCommandOutput['LastModified'];
+	metaData: HeadObjectCommandOutput['Metadata'];
+	contentType: HeadObjectCommandOutput['ContentType'];
+	contentLength: HeadObjectCommandOutput['ContentLength'];
+	versionId: HeadObjectCommandOutput['VersionId'];
 };
 
 export type S3ProviderRemoveOutput = DeleteObjectCommandOutput;

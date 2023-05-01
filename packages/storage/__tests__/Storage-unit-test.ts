@@ -55,6 +55,10 @@ class TestCustomProvider implements StorageProvider {
 	list(key: string, config: CustomProviderConfig) {
 		return Promise.resolve({ list: 'list' });
 	}
+
+	getProperties(key: string, config: CustomProviderConfig) {
+		return Promise.resolve({ list: 'getProperties' });
+	}
 }
 
 class TestCustomProviderWithCopy

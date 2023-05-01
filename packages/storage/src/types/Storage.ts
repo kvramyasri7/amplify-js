@@ -15,6 +15,7 @@ import {
 	S3ProviderListOutput,
 	S3ProviderCopyOutput,
 	S3ProviderPutOutput,
+	S3ProviderGetPropertiesOutput,
 } from '../';
 
 type Tail<T extends any[]> = ((...t: T) => void) extends (
@@ -87,6 +88,13 @@ export type StorageGetConfig<T extends Record<string, any>> =
 				T
 		  >;
 
+export type StorageGetPropertiesConfig<T extends Record<string, any>> =
+	T extends StorageProvider
+		? StorageOperationConfig<T, 'getProperties'>
+		: StorageOperationConfigMap<
+				StorageOperationConfig<AWSS3Provider, 'getProperties'>,
+				T
+		  >;
 export type StoragePutConfig<T extends Record<string, any>> =
 	T extends StorageProvider
 		? StorageOperationConfig<T, 'put'>
@@ -168,6 +176,11 @@ export type StorageCopyOutput<T> = PickProviderOutput<
 	'copy'
 >;
 
+export type StorageGetPropertiesOutput<T> = PickProviderOutput<
+	Promise<S3ProviderGetPropertiesOutput>,
+	T,
+	'getProperties'
+>;
 /**
  * Utility type to allow custom provider to use any config keys, if provider is set to AWSS3 then it should use
  * AWSS3Provider's config.

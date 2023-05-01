@@ -8,6 +8,7 @@ import {
 	ListObjectsV2Command,
 	CreateMultipartUploadCommand,
 	UploadPartCommand,
+	HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { S3RequestPresigner } from '@aws-sdk/s3-request-presigner';
 
@@ -51,6 +52,15 @@ S3Client.prototype.send = jest.fn(async command => {
 		return {
 			Contents: [resultObj],
 			IsTruncated: false,
+		};
+	} else if (command instanceof HeadObjectCommand) {
+		return {
+			ContentType: 'text/plain',
+			ContentLength: '100',
+			ETag: 'etag',
+			LastModified: 'lastmodified',
+			Metadata: { key: 'value' },
+			VersionId: '1',
 		};
 	}
 	return 'data';
@@ -168,7 +178,51 @@ describe('StorageProvider test', () => {
 			});
 		});
 	});
-
+	describe('getProperties test', () => {
+		test('getProperties successfully', async () => {
+			expect.assertions(1);
+			jest.spyOn(Credentials, 'get').mockImplementationOnce(() => {
+				return Promise.resolve(credentials);
+			});
+			const spyon = jest.spyOn(S3Client.prototype, 'send');
+			const metaData = { key: 'value' };
+			expect(await storage.getProperties('key')).toEqual({
+				contentType: 'text/plain',
+				contentLength: '100',
+				eTag: 'etag',
+				lastModified: 'lastmodified',
+				metaData,
+				versionId: '1',
+			});
+			spyon.mockClear();
+		});
+		test('getProperties with track', async () => {
+			expect.assertions(1);
+			jest.spyOn(Credentials, 'get').mockImplementationOnce(() => {
+				return Promise.resolve(credentials);
+			});
+			const spyon = jest.spyOn(S3Client.prototype, 'send');
+			const metaData = { key: 'value' };
+			expect(await storage.getProperties('key')).toEqual({
+				contentType: 'text/plain',
+				contentLength: '100',
+				eTag: 'etag',
+				lastModified: 'lastmodified',
+				metaData,
+				versionId: '1',
+			});
+			const dispatchSpy = jest.spyOn(StorageUtils, 'dispatchStorageEvent');
+			expect(dispatchSpy).toHaveBeenCalledTimes(1);
+			expect(dispatchSpy).toBeCalledWith(
+				true,
+				'getSignedUrl',
+				{ method: 'get', result: 'success' },
+				null,
+				'Signed URL: url'
+			);
+			spyon.mockClear();
+		});
+	});
 	describe('get test', () => {
 		test('get object without download', async () => {
 			expect.assertions(3);
