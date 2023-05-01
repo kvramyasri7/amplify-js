@@ -1592,14 +1592,17 @@ jobs:
             - amplify-ssh-deps-{{ .Branch }}
             - amplify-ssh-deps
       - run:
-          name: 'Post-release steps'
+          name: 'Update API documentation'
           command: |
             git config --global user.email $GITHUB_EMAIL
             git config --global user.name $GITHUB_USER
             git pull origin release
-            yarn workspace @aws-amplify/core build
-            git add ./packages/core/src/Platform/version.ts
-            git commit -m "chore(release): update version.ts [ci skip]"
+            yarn run docs
+            git add ./docs/api/
+            git commit -m "chore(release): update API docs [ci skip]"
+      - run:
+          name: 'Push post release changes'
+          command: |
             git push origin release
             git push --force-with-lease origin release:main
 
