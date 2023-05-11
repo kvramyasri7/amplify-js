@@ -279,10 +279,6 @@ export class Storage {
 	 * @return - A promise resolves to either a presigned url or the object
 	 */
 	// Adding & { download?: boolean }, if not T extends { download: true } ? ... : ... will not work properly
-	public get<T extends Record<string, any> & { download?: boolean }>(
-		key: string,
-		config?: StorageGetConfig<T>
-	): StorageGetOutput<T>;
 	public get<
 		T extends StorageProvider | { [key: string]: any; download?: boolean }
 	>(key: string, config?: StorageGetConfig<T>): StorageGetOutput<T> {
@@ -301,14 +297,11 @@ export class Storage {
 			...config,
 			cancelTokenSource,
 		});
+		console.log('Hello');
 		this.updateRequestToBeCancellable(responsePromise, cancelTokenSource);
 		return responsePromise as StorageGetOutput<T>;
 	}
 
-	public getProperties<T extends Record<string, any>>(
-		key: string,
-		config?: StorageGetPropertiesConfig<T>
-	): StorageGetPropertiesOutput<T>;
 	public getProperties<T extends StorageProvider | { [key: string]: any }>(
 		key: string,
 		config?: StorageGetPropertiesConfig<T>
@@ -327,6 +320,7 @@ export class Storage {
 		const responsePromise = prov.getProperties(key, {
 			...config,
 		});
+		console.log('Helllo');
 		this.updateRequestToBeCancellable(responsePromise, cancelTokenSource);
 		return responsePromise as StorageGetPropertiesOutput<T>;
 	}

@@ -52,6 +52,7 @@ import {
 	S3ProviderListOutput,
 	S3ProviderGetPropertiesConfig,
 	S3ProviderGetPropertiesOutput,
+	CommonStorageOptions,
 } from '../types';
 import { StorageErrorStrings } from '../common/StorageErrorStrings';
 import { dispatchStorageEvent } from '../common/StorageUtils';
@@ -353,10 +354,10 @@ export class AWSS3Provider implements StorageProvider {
 	 * @return {Promise<string | GetObjectCommandOutput>} - A promise resolves to Amazon S3 presigned URL or the
 	 * GetObjectCommandOutput if download is set to true on success
 	 */
-	public async get<T extends S3ProviderGetConfig & StorageOptions>(
-		key: string,
-		config?: T
-	): Promise<S3ProviderGetOuput<T>>;
+	// public async get<T extends S3ProviderGetConfig & StorageOptions>(
+	// 	key: string,
+	// 	config?: T
+	// ): Promise<S3ProviderGetOuput<T>>;
 	public async get(
 		key: string,
 		config?: S3ProviderGetConfig
@@ -387,7 +388,7 @@ export class AWSS3Provider implements StorageProvider {
 		const emitter = new events.EventEmitter();
 		const s3 = this._createNewS3Client(opt, emitter);
 		logger.debug('get ' + key + ' from ' + final_key);
-
+		console.log('Hello in provider');
 		const params: GetObjectCommandInput = {
 			Bucket: bucket,
 			Key: final_key,
@@ -510,25 +511,16 @@ export class AWSS3Provider implements StorageProvider {
 	 * @return {Promise<S3ProviderGetPropertiesOutput>} - A promise resolves to Amazon S3 presigned URL or the
 	 * GetObjectCommandOutput if download is set to true on success
 	 */
-	public async getProperties<
-		T extends S3ProviderGetPropertiesConfig & StorageOptions
-	>(key: string, config?: T): Promise<S3ProviderGetPropertiesOutput>;
 	public async getProperties(
 		key: string,
-		config?: S3ProviderGetPropertiesConfig
+		config?: CommonStorageOptions
 	): Promise<S3ProviderGetPropertiesOutput> {
 		const credentialsOK = await this._ensureCredentials();
 		if (!credentialsOK || !this._isWithCredentials(this._config)) {
 			throw new Error(StorageErrorStrings.NO_CREDENTIALS);
 		}
 		const opt = Object.assign({}, this._config, config);
-		const {
-			bucket,
-			track,
-			SSECustomerAlgorithm,
-			SSECustomerKey,
-			SSECustomerKeyMD5,
-		} = opt;
+		const { bucket, track } = opt;
 		const prefix = this._prefix(opt);
 		const final_key = prefix + key;
 		const emitter = new events.EventEmitter();
@@ -539,16 +531,7 @@ export class AWSS3Provider implements StorageProvider {
 			Bucket: bucket,
 			Key: final_key,
 		};
-		// See: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#headObject-property
-		if (SSECustomerAlgorithm) {
-			params.SSECustomerAlgorithm = SSECustomerAlgorithm;
-		}
-		if (SSECustomerKey) {
-			params.SSECustomerKey = SSECustomerKey;
-		}
-		if (SSECustomerKeyMD5) {
-			params.SSECustomerKeyMD5 = SSECustomerKeyMD5;
-		}
+		// See: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#headObject-propert
 
 		const headObjectCommand = new HeadObjectCommand(params);
 		try {
