@@ -50,7 +50,6 @@ import {
 	UploadTask,
 	S3ClientOptions,
 	S3ProviderListOutput,
-	S3ProviderGetPropertiesConfig,
 	S3ProviderGetPropertiesOutput,
 	CommonStorageOptions,
 } from '../types';

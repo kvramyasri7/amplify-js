@@ -5,7 +5,6 @@ import {
 	CopyObjectRequest,
 	_Object,
 	DeleteObjectCommandOutput,
-	HeadObjectRequest,
 	HeadObjectCommandOutput,
 } from '@aws-sdk/client-s3';
 import { StorageOptions, StorageAccessLevel } from './Storage';
@@ -51,12 +50,6 @@ export type S3ProviderGetConfig = CommonStorageOptions & {
 	SSECustomerKey?: GetObjectRequest['SSECustomerKey'];
 	SSECustomerKeyMD5?: GetObjectRequest['SSECustomerKeyMD5'];
 	validateObjectExistence?: boolean;
-};
-
-export type S3ProviderGetPropertiesConfig = CommonStorageOptions & {
-	SSECustomerKey?: HeadObjectRequest['SSECustomerKey'];
-	SSECustomerKeyMD5?: HeadObjectRequest['SSECustomerKeyMD5'];
-	SSECustomerAlgorithm?: HeadObjectRequest['SSECustomerAlgorithm'];
 };
 
 export type S3ProviderGetOuput<T> = T extends { download: true }
