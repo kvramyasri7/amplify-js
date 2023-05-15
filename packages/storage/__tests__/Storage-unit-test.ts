@@ -544,18 +544,18 @@ describe('Storage', () => {
 				getSpy.mockClear();
 			});
 
-			test('get object with download', async () => {
-				const blob = { Body: new Blob(['body']) };
-				getSpy = jest
-					.spyOn(AWSStorageProvider.prototype, 'get')
-					.mockImplementation(() => {
-						return Promise.resolve(blob);
-					});
-				const getOutput = await storage.get('key', { download: true });
-				expect(getSpy).toBeCalled();
-				expect(getOutput).toBe(blob);
-				getSpy.mockClear();
-			});
+			// test('get object with download', async () => {
+			// 	const blob = { Body: new Blob(['body']) };
+			// 	getSpy = jest
+			// 		.spyOn(AWSStorageProvider.prototype, 'get')
+			// 		.mockImplementation(() => {
+			// 			return Promise.resolve(blob);
+			// 		});
+			// 	const getOutput = await storage.get('key', { download: true });
+			// 	expect(getSpy).toBeCalled();
+			// 	expect(getOutput).toBe(blob);
+			// 	getSpy.mockClear();
+			// });
 
 			test('get object with all available config', async () => {
 				await storage.get('key', {

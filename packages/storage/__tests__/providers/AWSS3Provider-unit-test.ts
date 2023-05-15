@@ -195,27 +195,28 @@ describe('StorageProvider test', () => {
 			spyon.mockClear();
 		});
 		test('getProperties with track', async () => {
-			expect.assertions(1);
+			expect.assertions(3);
 			jest.spyOn(Credentials, 'get').mockImplementationOnce(() => {
 				return Promise.resolve(credentials);
 			});
 			const spyon = jest.spyOn(S3Client.prototype, 'send');
+			const dispatchSpy = jest.spyOn(StorageUtils, 'dispatchStorageEvent');
 			const metaData = { key: 'value' };
-			expect(await storage.getProperties('key')).toEqual({
+			expect(await storage.getProperties('key', { track: true })).toEqual({
 				contentType: 'text/plain',
 				contentLength: '100',
 				eTag: 'etag',
 				lastModified: 'lastmodified',
 				metaData,
 			});
-			const dispatchSpy = jest.spyOn(StorageUtils, 'dispatchStorageEvent');
+
 			expect(dispatchSpy).toHaveBeenCalledTimes(1);
 			expect(dispatchSpy).toBeCalledWith(
 				true,
-				'getSignedUrl',
-				{ method: 'get', result: 'success' },
+				'getProperties',
+				{ method: 'getProperties', result: 'success' },
 				null,
-				'Signed URL: url'
+				'getProperties successful for key'
 			);
 			spyon.mockClear();
 		});
@@ -280,7 +281,7 @@ describe('StorageProvider test', () => {
 			jest.spyOn(formatURL, 'formatUrl').mockReturnValueOnce('url');
 			const spyon2 = jest.spyOn(Hub, 'dispatch');
 
-			expect(await storage.get('key', { downloaded: false, track: true })).toBe(
+			expect(await storage.get('key', { download: false, track: true })).toBe(
 				'url'
 			);
 			expect(spyon.mock.calls[0][0].path).toEqual('/public/key');
