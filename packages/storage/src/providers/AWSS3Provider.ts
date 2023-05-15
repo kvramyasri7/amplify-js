@@ -535,14 +535,12 @@ export class AWSS3Provider implements StorageProvider {
 		const headObjectCommand = new HeadObjectCommand(params);
 		try {
 			const response = await s3.send(headObjectCommand);
-
 			const getPropertiesResponse: S3ProviderGetPropertiesOutput = {
 				contentType: response.ContentType,
 				contentLength: response.ContentLength,
 				eTag: response.ETag,
 				lastModified: response.LastModified,
 				metaData: response.Metadata,
-				versionId: response.VersionId,
 			};
 			dispatchStorageEvent(
 				track,

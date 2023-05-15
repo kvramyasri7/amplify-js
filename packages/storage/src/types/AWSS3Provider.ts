@@ -104,12 +104,11 @@ export type S3ProviderListOutput = {
 };
 
 export type S3ProviderGetPropertiesOutput = {
-	eTag: HeadObjectCommandOutput['ETag'];
-	lastModified: HeadObjectCommandOutput['LastModified'];
-	metaData: HeadObjectCommandOutput['Metadata'];
-	contentType: HeadObjectCommandOutput['ContentType'];
-	contentLength: HeadObjectCommandOutput['ContentLength'];
-	versionId: HeadObjectCommandOutput['VersionId'];
+	eTag: string;
+	lastModified: Date;
+	metaData: Record<string, string>;
+	contentType: string;
+	contentLength: number;
 };
 
 export type S3ProviderRemoveOutput = DeleteObjectCommandOutput;

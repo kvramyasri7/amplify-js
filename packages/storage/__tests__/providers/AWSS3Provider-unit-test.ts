@@ -60,7 +60,6 @@ S3Client.prototype.send = jest.fn(async command => {
 			ETag: 'etag',
 			LastModified: 'lastmodified',
 			Metadata: { key: 'value' },
-			VersionId: '1',
 		};
 	}
 	return 'data';
@@ -192,7 +191,6 @@ describe('StorageProvider test', () => {
 				eTag: 'etag',
 				lastModified: 'lastmodified',
 				metaData,
-				versionId: '1',
 			});
 			spyon.mockClear();
 		});
@@ -209,7 +207,6 @@ describe('StorageProvider test', () => {
 				eTag: 'etag',
 				lastModified: 'lastmodified',
 				metaData,
-				versionId: '1',
 			});
 			const dispatchSpy = jest.spyOn(StorageUtils, 'dispatchStorageEvent');
 			expect(dispatchSpy).toHaveBeenCalledTimes(1);
