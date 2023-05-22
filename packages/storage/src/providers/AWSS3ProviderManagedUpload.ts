@@ -79,8 +79,8 @@ export class AWSS3ProviderManagedUpload {
 				console.log('Hello put command');
 				const putObjectCommand = new PutObjectCommand(this.params);
 				const res = this.s3client.send(putObjectCommand);
-				
-				console.log('result', res.);
+
+				console.log('result', res);
 				return res;
 			} else {
 				// Step 1: Determine appropriate part size.
