@@ -115,17 +115,6 @@ export class AWSS3ProviderManagedUpload {
 			}
 		} catch (error) {
 			// if any error is thrown, call cleanup
-			console.log('error occured', error);
-			if (error.contains('Content-MD5')) {
-				try {
-					this.params.ContentMD5 = await calculateContentMd5(this.body);
-					console.log('param.contentMD5', this.params.ContentMD5);
-					const putObjectCommand = new PutObjectCommand(this.params);
-					return this.s3client.send(putObjectCommand);
-				} catch (error) {
-					throw error;
-				}
-			}
 			await this.cleanup(this.uploadId);
 			logger.error('Error. Cancelling the multipart upload.');
 			throw error;
