@@ -8,6 +8,7 @@ import {
 	Hub,
 	parseAWSExports,
 } from '@aws-amplify/core';
+import { calculateContentMd5 } from '../common/Md5Utils';
 import {
 	S3Client,
 	GetObjectCommand,
@@ -449,7 +450,7 @@ export class AWSS3Provider implements StorageProvider {
 		}
 		if (validateObjectExistence) {
 			const headObjectCommand = new HeadObjectCommand(params);
-			
+
 			try {
 				await s3.send(headObjectCommand);
 			} catch (error) {
@@ -506,11 +507,11 @@ export class AWSS3Provider implements StorageProvider {
 	 * @return an instance of AWSS3UploadTask or a promise that resolves to an object with the new object's key on
 	 * success.
 	 */
-	public put<T extends S3ProviderPutConfig>(
+	public async put<T extends S3ProviderPutConfig>(
 		key: string,
 		object: PutObjectCommandInput['Body'],
 		config?: T
-	): S3ProviderPutOutput<T> {
+	): Promise<S3ProviderPutOutput<T>> {
 		const opt = Object.assign({}, this._config, config);
 		const { bucket, track, progressCallback, level, resumable } = opt;
 		const {
@@ -572,6 +573,7 @@ export class AWSS3Provider implements StorageProvider {
 			params.SSEKMSKeyId = SSEKMSKeyId;
 		}
 
+		//params.ContentMD5 = await calculateContentMd5(object as File);
 		const emitter = new events.EventEmitter();
 		const uploader = new AWSS3ProviderManagedUpload(params, opt, emitter);
 

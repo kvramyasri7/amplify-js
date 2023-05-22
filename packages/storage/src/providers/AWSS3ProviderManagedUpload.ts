@@ -31,6 +31,7 @@ import {
 	DEFAULT_QUEUE_SIZE,
 	MAX_OBJECT_SIZE,
 } from '../common/S3ClientUtils';
+import { calculateContentMd5 } from '../common/Md5Utils';
 
 const logger = new Logger('AWSS3ProviderManagedUpload');
 
@@ -57,7 +58,11 @@ export class AWSS3ProviderManagedUpload {
 	private totalBytesToUpload = 0;
 	private emitter: events.EventEmitter | null = null;
 
-	constructor(params: PutObjectCommandInput, opts, emitter: events.EventEmitter) {
+	constructor(
+		params: PutObjectCommandInput,
+		opts,
+		emitter: events.EventEmitter
+	) {
 		this.params = params;
 		this.opts = opts;
 		this.emitter = emitter;
@@ -65,14 +70,18 @@ export class AWSS3ProviderManagedUpload {
 	}
 
 	public async upload() {
+		this.body = this.validateAndSanitizeBody(this.params.Body);
+		this.totalBytesToUpload = this.byteLength(this.body);
 		try {
-			this.body = this.validateAndSanitizeBody(this.params.Body);
-			this.totalBytesToUpload = this.byteLength(this.body);
 			if (this.totalBytesToUpload <= DEFAULT_PART_SIZE) {
 				// Multipart upload is not required. Upload the sanitized body as is
 				this.params.Body = this.body;
+				console.log('Hello put command');
 				const putObjectCommand = new PutObjectCommand(this.params);
-				return this.s3client.send(putObjectCommand);
+				const res = this.s3client.send(putObjectCommand);
+				
+				console.log('result', res.);
+				return res;
 			} else {
 				// Step 1: Determine appropriate part size.
 				this.partSize = calculatePartSize(this.totalBytesToUpload);
@@ -106,6 +115,17 @@ export class AWSS3ProviderManagedUpload {
 			}
 		} catch (error) {
 			// if any error is thrown, call cleanup
+			console.log('error occured', error);
+			if (error.contains('Content-MD5')) {
+				try {
+					this.params.ContentMD5 = await calculateContentMd5(this.body);
+					console.log('param.contentMD5', this.params.ContentMD5);
+					const putObjectCommand = new PutObjectCommand(this.params);
+					return this.s3client.send(putObjectCommand);
+				} catch (error) {
+					throw error;
+				}
+			}
 			await this.cleanup(this.uploadId);
 			logger.error('Error. Cancelling the multipart upload.');
 			throw error;
