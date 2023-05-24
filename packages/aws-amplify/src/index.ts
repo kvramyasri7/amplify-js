@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { Amplify } from '@aws-amplify/core';
+import { AuthHubChannelMap } from '@aws-amplify/auth';
+import { Hub as HubBase, HubClass } from '@aws-amplify/core';
 export {
 	Analytics,
 	AnalyticsProvider,
@@ -33,6 +35,10 @@ export {
 	I18n,
 	ServiceWorker,
 	AWSCloudWatchProvider,
+	HubClass,
+	InferHubTypes,
 } from '@aws-amplify/core';
 export { withSSRContext } from './withSSRContext';
 export { Geo } from '@aws-amplify/geo';
+
+export const Hub = HubBase as unknown as HubClass<AuthHubChannelMap>;
