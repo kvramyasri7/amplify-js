@@ -82,6 +82,7 @@ type _S3ProviderPutConfig = {
 	tagging?: PutObjectRequest['Tagging'];
 	useAccelerateEndpoint?: boolean;
 	resumable?: boolean;
+	objectLockStatus?: boolean;
 };
 
 export type ResumableUploadConfig = {

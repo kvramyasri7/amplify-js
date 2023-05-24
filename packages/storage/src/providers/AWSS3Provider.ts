@@ -607,6 +607,7 @@ export class AWSS3Provider implements StorageProvider {
 			metadata,
 			tagging,
 			acl,
+			objectLockStatus,
 		} = opt;
 		const {
 			serverSideEncryption,
@@ -657,6 +658,9 @@ export class AWSS3Provider implements StorageProvider {
 			params.SSEKMSKeyId = SSEKMSKeyId;
 		}
 
+		if (objectLockStatus) {
+			params.ContentMD5 = await calculateContentMd5(object as File);
+		}
 		//params.ContentMD5 = await calculateContentMd5(object as File);
 		const emitter = new events.EventEmitter();
 		const uploader = new AWSS3ProviderManagedUpload(params, opt, emitter);
@@ -705,6 +709,7 @@ export class AWSS3Provider implements StorageProvider {
 
 			return uploader.upload().then(response => {
 				logger.debug('upload result', response);
+				console.log('response after upload', response);
 				dispatchStorageEvent(
 					track,
 					'upload',
@@ -715,6 +720,7 @@ export class AWSS3Provider implements StorageProvider {
 				return { key };
 			}) as S3ProviderPutOutput<T>;
 		} catch (error) {
+			console.log('Error in catch ,', error);
 			logger.warn('error uploading', error);
 			dispatchStorageEvent(
 				track,

@@ -1,10 +1,16 @@
 import { Md5 } from '@aws-sdk/md5-js';
 import { toBase64 } from '@aws-sdk/util-base64-browser';
 
-export const calculateContentMd5 = async (file: File): Promise<string> => {
+export const calculateContentMd5 = async (
+	content: File | string
+): Promise<string> => {
 	const hasher = new Md5();
-	const buffer = await readFile(file);
-	hasher.update(buffer);
+	if (typeof content === 'string') {
+		hasher.update(content);
+	} else {
+		const buffer = await readFile(content);
+		hasher.update(buffer);
+	}
 	const digest = await hasher.digest();
 	return toBase64(digest);
 };
