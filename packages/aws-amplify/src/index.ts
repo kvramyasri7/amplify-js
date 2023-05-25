@@ -29,16 +29,15 @@ export { Notifications } from '@aws-amplify/notifications';
 export { Predictions } from '@aws-amplify/predictions';
 export {
 	ConsoleLogger as Logger,
-	Hub,
 	ClientDevice,
 	Signer,
 	I18n,
 	ServiceWorker,
 	AWSCloudWatchProvider,
 	HubClass,
-	InferHubTypes,
 } from '@aws-amplify/core';
 export { withSSRContext } from './withSSRContext';
 export { Geo } from '@aws-amplify/geo';
+console.log('New PR linked');
 
 export const Hub = HubBase as unknown as HubClass<AuthHubChannelMap>;

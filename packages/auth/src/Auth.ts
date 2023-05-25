@@ -27,14 +27,12 @@ import {
 	Amplify,
 	ConsoleLogger as Logger,
 	Credentials,
-	Hub,
 	StorageHelper,
 	ICredentials,
 	browserOrNode,
 	parseAWSExports,
 	UniversalStorage,
 	urlSafeDecode,
-	HubCallback,
 } from '@aws-amplify/core';
 import {
 	CookieStorage,
@@ -66,8 +64,11 @@ import {
 	CognitoHostedUIIdentityProvider,
 	IAuthDevice,
 } from './types/Auth';
+
+import { Hub as HubBase } from '@aws-amplify/core';
+import { HubClass } from '@aws-amplify/core';
 import { GetHubPayloads } from '@aws-amplify/core';
-import { HubClass } from '../../aws-amplify/src';
+import { HubCallback } from '@aws-amplify/core';
 
 export type AuthHubChannelMap = {
 	auth: {
@@ -1195,7 +1196,7 @@ export class AuthClass {
 						});
 					}
 					dispatchAuthEvent({
-						eveent: 'verify',
+						event: 'verify',
 						data: user,
 						message: `A user ${user.getUsername()} has been verified`,
 					});

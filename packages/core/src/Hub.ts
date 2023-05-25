@@ -57,7 +57,6 @@ interface IListener<P extends HubPayload = HubPayload> {
 	name: string;
 	callback: HubCallback<P>;
 }
-
 export type HubCapsule<P extends HubPayload = HubPayload> = {
 	channel: string;
 	payload: P;
@@ -309,7 +308,7 @@ export class HubClass<ChannelMap extends ChannelEventPayloadMap> {
 	}
 }
 
-/*We export a __default__ instance of HubClass to use it as a
+/*We export a __default__ instance of HubClass to use it as a 
 pseudo Singleton for the main messaging bus, however you can still create
 your own instance of HubClass() for a separate "private bus" of events.*/
 export const Hub = new HubClass('__default__');
