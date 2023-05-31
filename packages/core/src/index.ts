@@ -75,6 +75,7 @@ export {
 	urlSafeDecode,
 	urlSafeEncode,
 } from './Util';
+console.log('Core Linked');
 
 /**
  * @deprecated use named import

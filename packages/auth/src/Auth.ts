@@ -72,7 +72,7 @@ import { HubCallback } from '@aws-amplify/core';
 
 export type AuthHubChannelMap = {
 	auth: {
-		signIn: any;
+		signIn: string;
 		configured: null;
 		autoSignIn: any;
 		autoSignIn_failure: null;
