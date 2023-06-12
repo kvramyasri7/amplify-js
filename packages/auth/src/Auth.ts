@@ -130,7 +130,7 @@ const MAX_AUTOSIGNIN_POLLING_MS = 3 * 60 * 1000;
  */
 export class AuthClass {
 	private _config: AuthOptions;
-	private userPool: CognitoUserPool;
+	private userPool: CognitoUserPool = null;
 	private user: any = null;
 	private _oAuthHandler: OAuth;
 	private _storage;
@@ -346,10 +346,10 @@ export class AuthClass {
 			return this.rejectNoUserPool();
 		}
 
-		let username: string;
-		let password: string;
+		let username: string = null;
+		let password: string = null;
 		const attributes: CognitoUserAttribute[] = [];
-		let validationData: CognitoUserAttribute[];
+		let validationData: CognitoUserAttribute[] = null;
 		let clientMetadata;
 		let autoSignIn: AutoSignInOptions = { enabled: false };
 		let autoSignInValidationData = {};
@@ -357,9 +357,9 @@ export class AuthClass {
 
 		if (params && typeof params === 'string') {
 			username = params;
-			password = restOfAttrs ? restOfAttrs[0] : '';
-			const email: string | null = restOfAttrs ? restOfAttrs[1] : null;
-			const phone_number: string | null = restOfAttrs ? restOfAttrs[2] : null;
+			password = restOfAttrs ? restOfAttrs[0] : null;
+			const email: string = restOfAttrs ? restOfAttrs[1] : null;
+			const phone_number: string = restOfAttrs ? restOfAttrs[2] : null;
 
 			if (email)
 				attributes.push(

@@ -34,7 +34,7 @@ export interface AuthOptions {
 	region?: string;
 	mandatorySignIn?: boolean;
 	cookieStorage?: ICookieStorageData;
-	oauth: OAuthOpts;
+	oauth?: OAuthOpts;
 	refreshHandlers?: object;
 	storage?: ICognitoStorage;
 	authenticationFlowType?: string;
