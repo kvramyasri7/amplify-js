@@ -1,6 +1,8 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import type { AuthHubChannelMap } from '@aws-amplify/auth';
+import { Hub as HubBase, HubClass } from '@aws-amplify/core';
 export { Amplify } from '@aws-amplify/core';
 export {
 	Analytics,
@@ -27,7 +29,8 @@ export { Notifications } from '@aws-amplify/notifications';
 export { Predictions } from '@aws-amplify/predictions';
 export {
 	ConsoleLogger as Logger,
-	Hub,
+	HubClass,
+	InferHubTypes,
 	ClientDevice,
 	Signer,
 	I18n,
@@ -36,3 +39,4 @@ export {
 } from '@aws-amplify/core';
 export { withSSRContext } from './withSSRContext';
 export { Geo } from '@aws-amplify/geo';
+export const Hub = HubBase as unknown as HubClass<AuthHubChannelMap>;
