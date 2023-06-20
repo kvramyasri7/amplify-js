@@ -263,7 +263,10 @@ class SubscriptionProcessor {
 		};
 	}
 
-	private hubQueryCompletionListener(completed: Function, capsule: HubCapsule) {
+	private hubQueryCompletionListener(
+		completed: Function,
+		capsule: HubCapsule<any, any>
+	) {
 		const {
 			payload: { event },
 		} = capsule;

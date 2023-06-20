@@ -10,41 +10,142 @@ const AMPLIFY_SYMBOL = (
 		? Symbol.for('amplify_default')
 		: '@@amplify_default'
 ) as Symbol;
-interface IPattern {
-	pattern: RegExp;
-	callback: HubCallback;
+
+export type LegacyCallback<
+	Channel extends string | RegExp,
+	EventData extends AmplifyEventDataMap = AmplifyEventDataMap
+> = { onHubCapsule: HubCallback<Channel, EventData> };
+
+function isLegacyCallback<
+	Channel extends string | RegExp,
+	EventData extends AmplifyEventDataMap = AmplifyEventDataMap
+>(callback: any): callback is LegacyCallback<Channel, EventData> {
+	return (
+		(<LegacyCallback<Channel, EventData>>callback).onHubCapsule !== undefined
+	);
 }
 
-interface IListener {
-	name: string;
-	callback: HubCallback;
-}
+export type AuthSignInResult = {};
+export type AuthSignUpResult = {};
+export type AuthError = {};
 
-export type HubCapsule = {
-	channel: string;
-	payload: HubPayload;
+export type AmplifyChannel =
+	| 'auth'
+	| 'storage'
+	| 'core'
+	| 'api'
+	| 'analytics'
+	| 'interactions'
+	| 'pubsub'
+	| 'datastore';
+
+export type AmplifyEventDataMap = { event: string; data?: unknown };
+
+export type AuthHubEventData =
+	| { event: 'signIn'; data: AuthSignInResult }
+	| { event: 'signUp'; data: AuthSignUpResult }
+	| { event: 'signUpFailure'; data: AuthError }
+	| { event: 'signOut'; data: any }
+	| { event: 'cognitoHostedUI'; data: any }
+	| { event: 'verify'; data: any };
+
+export type HubCapsule<
+	Channel extends string | RegExp,
+	EventDataMap extends AmplifyEventDataMap
+> = {
+	channel: Channel;
+	payload: HubPayload<EventDataMap>;
 	source: string;
 	patternInfo?: string[];
 };
 
-export type HubPayload = {
-	event: string;
-	data?: any;
+export type HubCallback<
+	Channel extends string | RegExp,
+	EventData extends AmplifyEventDataMap = AmplifyEventDataMap
+> = (capsule: HubCapsule<Channel, EventData>) => void;
+
+export type HubPayload<
+	EventDataMap extends AmplifyEventDataMap = AmplifyEventDataMap
+> = EventDataMap & {
 	message?: string;
 };
 
-export type HubCallback = (capsule: HubCapsule) => void;
+export type AmplifyHubCallbackMap<Channel extends AmplifyChannel> = {
+	auth: HubCallback<Channel, AuthHubEventData>;
+	storage: HubCallback<Channel>;
+	core: HubCallback<Channel>;
+	analytics: HubCallback<Channel>;
+	api: HubCallback<Channel>;
+	interactions: HubCallback<Channel>;
+	pubsub: HubCallback<Channel>;
+	datastore: HubCallback<Channel>;
+};
 
-export type LegacyCallback = { onHubCapsule: HubCallback };
+export type GetHubCallBack<
+	Channel extends string | RegExp,
+	EventDataMap extends AmplifyEventDataMap = AmplifyEventDataMap
+> = Channel extends AmplifyChannel
+	? AmplifyHubCallbackMap<Channel>[Channel]
+	: HubCallback<Channel, EventDataMap>;
 
-function isLegacyCallback(callback: any): callback is LegacyCallback {
-	return (<LegacyCallback>callback).onHubCapsule !== undefined;
+export type AnyChannel = string & {};
+
+// export type PayloadFromCallback<T> = T extends (
+// 	arg?: infer A extends Record<string, any>
+// ) => any
+// 	? A['payload']
+// 	: never;
+
+export type AmplifyChannelMap<
+	Channel extends AmplifyChannel | AnyChannel = AmplifyChannel | AnyChannel,
+	EventDataMap extends AmplifyEventDataMap = AmplifyEventDataMap
+> = {
+	channel: Channel | RegExp;
+	eventData: EventDataMap;
+};
+
+interface IListener<
+	Channel extends string | RegExp = string | RegExp,
+	EventData extends AmplifyEventDataMap = AmplifyEventDataMap
+> {
+	name: string;
+	callback: HubCallback<Channel, EventData>;
+}
+interface IPattern<
+	Channel extends string | RegExp,
+	EventData extends AmplifyEventDataMap = AmplifyEventDataMap
+> {
+	pattern: RegExp;
+	callback: HubCallback<Channel, EventData>;
 }
 
+// Hub
+// declare class HubClass {
+//   listen<
+//     ChannelMap extends AmplifyChannelMap,
+//     Channel extends ChannelMap["channel"] = ChannelMap["channel"]
+//   >(
+//     channel: Channel,
+//     callback: GetHubCallBack<Channel, ChannelMap["eventData"]>,
+//     listenerName?: string
+//   ): void;
+
+//   dispatch<
+//     ChannelMap extends AmplifyChannelMap,
+//     Channel extends ChannelMap["channel"] = ChannelMap["channel"]
+//   >(
+//     channel: Channel,
+//     payload: PayloadFromCallback<
+//       GetHubCallBack<Channel, ChannelMap["eventData"]>
+//     >,
+//     source?: string,
+//     ampSymbol?: Symbol
+//   ): void;
+// }
 export class HubClass {
 	name: string;
 	private listeners: IListener[] = [];
-	private patterns: IPattern[] = [];
+	private patterns: IPattern<any>[] = [];
 
 	protectedChannels = [
 		'core',
@@ -68,32 +169,40 @@ export class HubClass {
 	 * @remarks
 	 * This private method is for internal use only. Instead of calling Hub.remove, call the result of Hub.listen.
 	 */
-	private _remove(channel: string | RegExp, listener: HubCallback) {
-		if (channel instanceof RegExp) {
-			const pattern = this.patterns.find(
-				({ pattern }) => pattern.source === channel.source
-			);
-			if (!pattern) {
-				logger.warn(`No listeners for ${channel}`);
-				return;
+	private _remove<
+		Channel extends string | RegExp,
+		EventData extends AmplifyEventDataMap = AmplifyEventDataMap
+	>(channel: Channel, listener: HubCallback<string | RegExp, EventData>) {
+		{
+			if (channel instanceof RegExp) {
+				const pattern = this.patterns.find(
+					({ pattern }) => pattern.source === channel.source
+				);
+				if (!pattern) {
+					logger.warn(`No listeners for ${channel}`);
+					return;
+				}
+				this.patterns = [...this.patterns.filter(x => x !== pattern)];
+			} else {
+				const holder = this.listeners[channel as string];
+				if (!holder) {
+					logger.warn(`No listeners for ${channel}`);
+					return;
+				}
+				this.listeners[channel as string] = [
+					...holder.filter(({ callback }) => callback !== listener),
+				];
 			}
-			this.patterns = [...this.patterns.filter(x => x !== pattern)];
-		} else {
-			const holder = this.listeners[channel];
-			if (!holder) {
-				logger.warn(`No listeners for ${channel}`);
-				return;
-			}
-			this.listeners[channel] = [
-				...holder.filter(({ callback }) => callback !== listener),
-			];
 		}
 	}
 
 	/**
 	 * @deprecated Instead of calling Hub.remove, call the result of Hub.listen.
 	 */
-	remove(channel: string | RegExp, listener: HubCallback) {
+	remove<
+		Channel extends string | RegExp,
+		EventData extends AmplifyEventDataMap = AmplifyEventDataMap
+	>(channel: Channel, listener: HubCallback<string | RegExp, EventData>) {
 		this._remove(channel, listener);
 	}
 
@@ -106,13 +215,17 @@ export class HubClass {
 	 * @param ampSymbol - Symbol used to determine if the event is dispatched internally on a protected channel
 	 *
 	 */
-	dispatch(
-		channel: string,
-		payload: HubPayload,
-		source: string = '',
+	dispatch<
+		EventData extends AmplifyEventDataMap,
+		ChannelMap extends AmplifyChannelMap,
+		Channel extends ChannelMap['channel'] = ChannelMap['channel']
+	>(
+		channel: Channel,
+		payload: HubPayload<EventData>,
+		source?: string,
 		ampSymbol?: Symbol
-	) {
-		if (this.protectedChannels.indexOf(channel) > -1) {
+	): void {
+		if (this.protectedChannels.indexOf(channel as string) > -1) {
 			const hasAccess = ampSymbol === AMPLIFY_SYMBOL;
 
 			if (!hasAccess) {
@@ -122,7 +235,7 @@ export class HubClass {
 			}
 		}
 
-		const capsule: HubCapsule = {
+		const capsule: HubCapsule<Channel, EventData> = {
 			channel,
 			payload: { ...payload },
 			source,
@@ -145,12 +258,15 @@ export class HubClass {
 	 * @returns A function which can be called to cancel the listener.
 	 *
 	 */
-	listen(
-		channel: string | RegExp,
-		callback?: HubCallback | LegacyCallback,
-		listenerName = 'noname'
-	) {
-		let cb: HubCallback;
+	listen<
+		ChannelMap extends AmplifyChannelMap,
+		Channel extends ChannelMap['channel'] = ChannelMap['channel']
+	>(
+		channel: Channel,
+		callback: GetHubCallBack<Channel, ChannelMap['eventData']>,
+		listenerName?: string
+	): () => void {
+		let cb: GetHubCallBack<Channel, ChannelMap['eventData']>;
 		// Check for legacy onHubCapsule callback for backwards compatability
 		if (isLegacyCallback(callback)) {
 			logger.warn(
@@ -169,11 +285,11 @@ export class HubClass {
 				callback: cb,
 			});
 		} else {
-			let holder = this.listeners[channel];
+			let holder = this.listeners[channel as string];
 
 			if (!holder) {
 				holder = [];
-				this.listeners[channel] = holder;
+				this.listeners[channel as string] = holder;
 			}
 
 			holder.push({
@@ -187,9 +303,12 @@ export class HubClass {
 		};
 	}
 
-	private _toListeners(capsule: HubCapsule) {
+	private _toListeners<
+		Channel extends string | RegExp,
+		EventDataMap extends AmplifyEventDataMap
+	>(capsule: HubCapsule<Channel, EventDataMap>) {
 		const { channel, payload } = capsule;
-		const holder = this.listeners[channel];
+		const holder = this.listeners[channel as string];
 
 		if (holder) {
 			holder.forEach(listener => {
@@ -214,7 +333,7 @@ export class HubClass {
 				const match = payloadStr.match(pattern.pattern);
 				if (match) {
 					const [, ...groups] = match;
-					const dispatchingCapsule: HubCapsule = {
+					const dispatchingCapsule: HubCapsule<Channel, EventDataMap> = {
 						...capsule,
 						patternInfo: groups,
 					};

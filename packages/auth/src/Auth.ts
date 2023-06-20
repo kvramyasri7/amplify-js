@@ -37,6 +37,7 @@ import {
 	urlSafeDecode,
 	HubCallback,
 } from '@aws-amplify/core';
+
 import {
 	CookieStorage,
 	CognitoUserPool,
@@ -491,7 +492,7 @@ export class AuthClass {
 
 	private async signInAfterUserConfirmed(
 		authDetails: AuthenticationDetails,
-		listenEvent?: HubCallback,
+		listenEvent?: any,
 		autoSignInPollingIntervalId?: ReturnType<typeof setInterval>
 	) {
 		const user = this.createCognitoUser(authDetails.getUsername());
