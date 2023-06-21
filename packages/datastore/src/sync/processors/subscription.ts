@@ -265,7 +265,7 @@ class SubscriptionProcessor {
 
 	private hubQueryCompletionListener(
 		completed: Function,
-		capsule: HubCapsule<any, any>
+		capsule: HubCapsule<'datastore'>
 	) {
 		const {
 			payload: { event },

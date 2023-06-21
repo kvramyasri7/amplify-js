@@ -39,19 +39,44 @@ export type AmplifyChannel =
 	| 'pubsub'
 	| 'datastore';
 
+export type NotificationsHubEventData = { event: 'record'; data: any };
 export type AmplifyEventDataMap = { event: string; data?: unknown };
 
 export type AuthHubEventData =
 	| { event: 'signIn'; data: AuthSignInResult }
 	| { event: 'signUp'; data: AuthSignUpResult }
 	| { event: 'signUpFailure'; data: AuthError }
+	| { event: 'signIn_failure'; data: AuthError }
+	| { event: 'confirmSignUp'; data: any }
 	| { event: 'signOut'; data: any }
 	| { event: 'cognitoHostedUI'; data: any }
-	| { event: 'verify'; data: any };
+	| { event: 'tokenRefresh_failure'; data: Error | undefined }
+	| { event: 'completeNewPassword_failure'; data: Error }
+	| { event: 'userDeleted'; data: string }
+	| { event: 'updateUserAttributes_failure'; data: Error }
+	| { event: 'updateUserAttributes'; data: Record<string, string> }
+	| { event: 'forgotPassword_failure'; data: Error }
+	| { event: 'verify'; data: any }
+	| { event: 'tokenRefresh'; data: undefined }
+	| { event: 'configured'; data: null }
+	| { event: 'autoSignIn'; data: any }
+	| { event: 'forgotPassword'; data: any }
+	| {
+			event: 'parsingCallbackUrl';
+			data: {
+				url: string | undefined;
+			};
+	  }
+	| { event: 'customOAuthState'; data: string }
+	| { event: 'cognitoHostedUI_failure'; data: Error }
+	| { event: 'customState_failure'; data: Error }
+	| { event: 'forgotPasswordSubmit'; data: any }
+	| { event: 'forgotPasswordSubmit_failure'; data: Error }
+	| { event: 'autoSignIn_failure'; data: null };
 
 export type HubCapsule<
 	Channel extends string | RegExp,
-	EventDataMap extends AmplifyEventDataMap
+	EventDataMap extends AmplifyEventDataMap = AmplifyEventDataMap
 > = {
 	channel: Channel;
 	payload: HubPayload<EventDataMap>;
@@ -79,6 +104,7 @@ export type AmplifyHubCallbackMap<Channel extends AmplifyChannel> = {
 	interactions: HubCallback<Channel>;
 	pubsub: HubCallback<Channel>;
 	datastore: HubCallback<Channel>;
+	notifications: HubCallback<Channel, NotificationsHubEventData>;
 };
 
 export type GetHubCallBack<

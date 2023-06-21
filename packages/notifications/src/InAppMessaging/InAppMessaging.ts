@@ -225,9 +225,9 @@ export default class InAppMessaging implements InAppMessagingInterface {
 		this.conflictHandler = handler;
 	};
 
-	private analyticsListener: HubCallback<string | RegExp> = ({
+	private analyticsListener: HubCallback<'notifications'> = ({
 		payload,
-	}: HubCapsule<string | RegExp, any>) => {
+	}: HubCapsule<'notifications'>) => {
 		const { event, data } = payload;
 		switch (event) {
 			case 'record': {

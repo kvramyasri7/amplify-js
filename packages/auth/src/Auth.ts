@@ -492,7 +492,7 @@ export class AuthClass {
 
 	private async signInAfterUserConfirmed(
 		authDetails: AuthenticationDetails,
-		listenEvent?: any,
+		listenEvent?: HubCallback<'auth'>,
 		autoSignInPollingIntervalId?: ReturnType<typeof setInterval>
 	) {
 		const user = this.createCognitoUser(authDetails.getUsername());
