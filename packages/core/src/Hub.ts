@@ -225,7 +225,7 @@ export class HubClass {
 	>(
 		channel: Channel,
 		payload: HubPayload<EventData>,
-		source?: string,
+		source?: '',
 		ampSymbol?: Symbol
 	): void {
 		if (this.protectedChannels.indexOf(channel as string) > -1) {
