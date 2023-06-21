@@ -12,12 +12,12 @@ const AMPLIFY_SYMBOL = (
 ) as Symbol;
 
 export type LegacyCallback<
-	Channel extends string | RegExp,
+	Channel extends string | RegExp = string | RegExp,
 	EventData extends AmplifyEventDataMap = AmplifyEventDataMap
 > = { onHubCapsule: HubCallback<Channel, EventData> };
 
 function isLegacyCallback<
-	Channel extends string | RegExp,
+	Channel extends string | RegExp = string | RegExp,
 	EventData extends AmplifyEventDataMap = AmplifyEventDataMap
 >(callback: any): callback is LegacyCallback<Channel, EventData> {
 	return (
@@ -75,7 +75,7 @@ export type AuthHubEventData =
 	| { event: 'autoSignIn_failure'; data: null };
 
 export type HubCapsule<
-	Channel extends string | RegExp,
+	Channel extends string | RegExp = string | RegExp,
 	EventDataMap extends AmplifyEventDataMap = AmplifyEventDataMap
 > = {
 	channel: Channel;
@@ -85,7 +85,7 @@ export type HubCapsule<
 };
 
 export type HubCallback<
-	Channel extends string | RegExp,
+	Channel extends string | RegExp = string | RegExp,
 	EventData extends AmplifyEventDataMap = AmplifyEventDataMap
 > = (capsule: HubCapsule<Channel, EventData>) => void;
 
@@ -145,29 +145,6 @@ interface IPattern<
 	callback: HubCallback<Channel, EventData>;
 }
 
-// Hub
-// declare class HubClass {
-//   listen<
-//     ChannelMap extends AmplifyChannelMap,
-//     Channel extends ChannelMap["channel"] = ChannelMap["channel"]
-//   >(
-//     channel: Channel,
-//     callback: GetHubCallBack<Channel, ChannelMap["eventData"]>,
-//     listenerName?: string
-//   ): void;
-
-//   dispatch<
-//     ChannelMap extends AmplifyChannelMap,
-//     Channel extends ChannelMap["channel"] = ChannelMap["channel"]
-//   >(
-//     channel: Channel,
-//     payload: PayloadFromCallback<
-//       GetHubCallBack<Channel, ChannelMap["eventData"]>
-//     >,
-//     source?: string,
-//     ampSymbol?: Symbol
-//   ): void;
-// }
 export class HubClass {
 	name: string;
 	private listeners: IListener[] = [];

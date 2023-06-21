@@ -227,7 +227,7 @@ export default class InAppMessaging implements InAppMessagingInterface {
 
 	private analyticsListener: HubCallback<'notifications'> = ({
 		payload,
-	}: HubCapsule<'notifications'>) => {
+	}: HubCapsule<'notifications', any>) => {
 		const { event, data } = payload;
 		switch (event) {
 			case 'record': {
