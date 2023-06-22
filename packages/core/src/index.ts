@@ -45,8 +45,8 @@ export { StorageHelper, MemoryStorage } from './StorageHelper';
 export { UniversalStorage } from './UniversalStorage';
 export {
 	Platform,
+	getAmplifyUserAgentObject,
 	getAmplifyUserAgent,
-	getAmplifyUserAgentString,
 } from './Platform';
 export {
 	ApiAction,
