@@ -165,6 +165,7 @@ export class HubClass {
 
 	constructor(name: string) {
 		this.name = name;
+		console.log('RfC testing');
 	}
 
 	/**
