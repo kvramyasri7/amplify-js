@@ -37,7 +37,8 @@ export type AmplifyChannel =
 	| 'analytics'
 	| 'interactions'
 	| 'pubsub'
-	| 'datastore';
+	| 'datastore'
+	| 'notifications';
 
 export type NotificationsHubEventData = { event: 'record'; data: any };
 export type AmplifyEventDataMap = { event: string; data?: unknown };
