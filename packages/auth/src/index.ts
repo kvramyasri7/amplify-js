@@ -18,9 +18,9 @@ import { AuthErrorStrings } from './common/AuthErrorStrings';
  * @deprecated use named import
  */
 export default Auth;
+export type { AuthHubChannelMap };
 export {
 	Auth,
-	AuthHubChannelMap,
 	CognitoUser,
 	CookieStorage,
 	CognitoHostedUIIdentityProvider,
