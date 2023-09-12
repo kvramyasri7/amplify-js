@@ -12,8 +12,7 @@ import { resolveS3ConfigAndInput } from '../../utils';
 import { assertValidationError } from '../../../../errors/utils/assertValidationError';
 import {
 	DEFAULT_PRESIGN_EXPIRATION,
-	MAX_URL_EXPIRATION,
-	SEVEN_DAYS_IN_SEC,
+	MAX_URL_EXPIRATION_IN_SEC,
 } from '../../utils/constants';
 
 export const getUrl = async function (
@@ -39,15 +38,12 @@ export const getUrl = async function (
 		);
 		urlExpirationInSec = Math.min(
 			Math.min(awsCredExpirationInSec, urlExpirationInSec),
-			SEVEN_DAYS_IN_SEC
+			MAX_URL_EXPIRATION_IN_SEC
 		);
 	}
-	const maxUrlExpirationInSec = Math.min(
-		MAX_URL_EXPIRATION / 1000,
-		SEVEN_DAYS_IN_SEC
-	);
+
 	assertValidationError(
-		urlExpirationInSec <= maxUrlExpirationInSec,
+		urlExpirationInSec <= MAX_URL_EXPIRATION_IN_SEC,
 		StorageValidationErrorCode.UrlExpirationMaxLimitExceed
 	);
 
