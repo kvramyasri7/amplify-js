@@ -7,6 +7,8 @@ export const DEFAULT_ACCESS_LEVEL = 'guest';
 
 export const DEFAULT_PRESIGN_EXPIRATION = 900;
 
+export const SEVEN_DAYS_IN_SEC = 604800;
+
 export const MAX_URL_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
 const MiB = 1024 * 1024;
