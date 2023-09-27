@@ -9,6 +9,7 @@ import {
 	DownloadTask,
 	UploadTask,
 } from '../../../types';
+import { DownloadTaskNative, TransferTask } from '../../../types/common';
 
 /**
  * type for S3 item.
@@ -33,6 +34,19 @@ export type ListOutputItem = Omit<StorageItem, 'metadata'>;
  * Output type for S3 downloadData API.
  */
 export type DownloadDataOutput = DownloadTask<StorageDownloadDataOutput<Item>>;
+
+/**
+ * Output type for S3 downloadFile web API.
+ */
+export type DownloadFileWebOutput = Pick<Item, 'key' | 'eTag'>;
+
+/**
+ * Output type for S3 downloadFile Native API.
+ */
+export type DownloadFileNativeOutput = Omit<
+	DownloadTaskNative<Pick<Item, 'key'>>,
+	'result'
+> & { key: string };
 
 /**
  * Output type for S3 getUrl API.

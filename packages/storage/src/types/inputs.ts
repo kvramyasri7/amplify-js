@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+	DownloadFileNativeOptions,
+	DownloadFileWebOptions,
+} from '../providers/s3/types';
+import {
 	StorageOptions,
 	StorageListAllOptions,
 	StorageListPaginateOptions,
@@ -33,6 +37,14 @@ export type StorageGetUrlInput<Options extends StorageOptions> =
 export type StorageDownloadDataInput<Options extends StorageOptions> =
 	StorageOperationInput<Options>;
 
+export type StorageDownloadFileWebInput<
+	Options extends DownloadFileWebOptions
+> = StorageOperationInput<Options> & { localFile: string };
+
+export type StorageDownloadFileNativeInput<
+	Options extends DownloadFileNativeOptions
+> = StorageOperationInput<Options> & { localFile: string };
+
 export type StorageUploadDataInput<Options extends StorageOptions> =
 	StorageOperationInput<Options> & {
 		data: StorageUploadDataPayload;
@@ -49,4 +61,4 @@ export type StorageCopyInput<
 /**
  * The data payload type for upload operation.
  */
-export type StorageUploadDataPayload = Blob | BufferSource | string | File;
+export type StorageUploadDataPayload = BufferSource | string | Blob | File;

@@ -52,4 +52,9 @@ export type DownloadTask<Result> = Omit<
 	'pause' | 'resume'
 >;
 
+export type DownloadTaskNative<Result> = Omit<
+	TransferTask<Result>,
+	'cancel' | 'result' | 'state'
+>;
+
 export type UploadTask<Result> = TransferTask<Result>;

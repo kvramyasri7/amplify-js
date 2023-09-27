@@ -4,6 +4,7 @@
 export {
 	uploadData,
 	downloadData,
+	downloadFile,
 	remove,
 	list,
 	getProperties,

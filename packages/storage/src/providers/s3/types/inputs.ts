@@ -11,6 +11,10 @@ import {
 	StorageUploadDataInput,
 } from '../../../types';
 import {
+	StorageDownloadFileNativeInput,
+	StorageDownloadFileWebInput,
+} from '../../../types/inputs';
+import {
 	GetPropertiesOptions,
 	GetUrlOptions,
 	ListAllOptions,
@@ -21,6 +25,7 @@ import {
 	CopyDestinationOptions,
 	CopySourceOptions,
 } from '../types';
+import { DownloadFileNativeOptions, DownloadFileWebOptions } from './options';
 
 // TODO: support use accelerate endpoint option
 /**
@@ -61,6 +66,17 @@ export type RemoveInput = StorageRemoveInput<RemoveOptions>;
  * Input type for S3 downloadData API.
  */
 export type DownloadDataInput = StorageDownloadDataInput<DownloadDataOptions>;
+/**
+ * Input type for S3 downloadFile Web API.
+ */
+export type DownloadFileWebInput =
+	StorageDownloadFileWebInput<DownloadFileWebOptions>;
+
+/**
+ * Input type for S3 downloadFile Native API.
+ */
+export type DownloadFileNativeInput =
+	StorageDownloadFileNativeInput<DownloadFileNativeOptions>;
 
 /**
  * Input type for S3 uploadData API.

@@ -3,6 +3,8 @@
 
 export {
 	GetUrlOptions,
+	DownloadFileNativeOptions,
+	DownloadFileWebOptions,
 	UploadDataOptions,
 	GetPropertiesOptions,
 	ListAllOptions,
@@ -14,6 +16,8 @@ export {
 } from './options';
 export {
 	DownloadDataOutput,
+	DownloadFileNativeOutput,
+	DownloadFileWebOutput,
 	GetUrlOutput,
 	UploadDataOutput,
 	ListOutputItem,
@@ -31,6 +35,8 @@ export {
 	ListPaginateInput,
 	RemoveInput,
 	DownloadDataInput,
+	DownloadFileWebInput,
+	DownloadFileNativeInput,
 	UploadDataInput,
 } from './inputs';
 export { S3Exception } from './errors';

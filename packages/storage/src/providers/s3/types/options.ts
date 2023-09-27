@@ -83,6 +83,17 @@ export type GetUrlOptions = ReadOptions &
  */
 export type DownloadDataOptions = ReadOptions & CommonOptions & TransferOptions;
 
+export type DownloadFileWebOptions = ReadOptions &
+	CommonOptions & {
+		resumable: false;
+	};
+
+export type DownloadFileNativeOptions = ReadOptions &
+	CommonOptions &
+	TransferOptions & {
+		resumable: true;
+	};
+
 export type UploadDataOptions = WriteOptions &
 	CommonOptions &
 	TransferOptions & {
