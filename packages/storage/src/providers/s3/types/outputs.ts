@@ -32,8 +32,11 @@ export type ListOutputItem = Omit<StorageItem, 'metadata'>;
 /**
  * Output type for S3 download API.
  */
-export type DownloadOutput = DownloadTask<StorageDownloadOutput<Item>>;
+export type DownloadOutputWithResumability = DownloadTask<
+	StorageDownloadOutput<Item>
+>;
 
+export type DownloadOutput = DownloadTask<Item>;
 /**
  * Output type for S3 getUrl API.
  */

@@ -21,6 +21,7 @@ import {
 	CopyDestinationOptions,
 	CopySourceOptions,
 } from '../types';
+import { DownloadOptionsWithResumability } from './options';
 
 // TODO: support use accelerate endpoint option
 /**
@@ -61,6 +62,9 @@ export type RemoveInput = StorageRemoveInput<RemoveOptions>;
  * Input type for S3 download API.
  */
 export type DownloadInput = StorageDownloadInput<DownloadOptions>;
+
+export type DownloadInputWithResumability =
+	StorageDownloadInput<DownloadOptionsWithResumability>;
 
 /**
  * Input type for S3 upload API.

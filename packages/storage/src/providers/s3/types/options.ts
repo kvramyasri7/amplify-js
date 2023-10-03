@@ -81,7 +81,17 @@ export type GetUrlOptions = ReadOptions &
 /**
  * Input options type for S3 download API.
  */
-export type DownloadOptions = ReadOptions & CommonOptions & TransferOptions;
+export type DownloadOptions = ReadOptions &
+	CommonOptions & { resumable?: false };
+
+export type DownloadOptionsWithResumability = ReadOptions &
+	CommonOptions &
+	TransferOptions &
+	ResumabilityOption;
+
+export type ResumabilityOption = {
+	resumable: true;
+};
 
 export type UploadOptions = WriteOptions &
 	CommonOptions &

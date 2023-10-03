@@ -10,6 +10,7 @@ import {
 export type StorageOperationInput<Options extends StorageOptions> = {
 	key: string;
 	options?: Options;
+	locationToDownload?: string;
 };
 
 export type StorageGetPropertiesInput<Options extends StorageOptions> =

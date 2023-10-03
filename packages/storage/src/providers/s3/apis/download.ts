@@ -8,6 +8,8 @@ import { resolveS3ConfigAndInput } from '../utils/resolveS3ConfigAndInput';
 import { StorageValidationErrorCode } from '../../../errors/types/validation';
 import { createDownloadTask } from '../utils';
 import { getObject } from '../utils/client';
+import { DownloadInputWithResumability } from '../types/inputs';
+import { DownloadOutputWithResumability } from '../types/outputs';
 
 /**
  * Download S3 object data to memory
@@ -39,27 +41,53 @@ import { getObject } from '../utils/client';
  * }
  *```
  */
-export const download = (input: DownloadInput): DownloadOutput => {
+
+type DownloadAPI = {
+	(input: DownloadInput): DownloadOutput;
+	/**
+	 * Download a file from specified key and access level to a local file path.
+	 * This method returns a Task instance instead of item information to offer
+	 * pause(), resume(), and cancel() capabilities.
+	 */
+	(input: DownloadInputWithResumability): DownloadOutputWithResumability;
+};
+export const download: DownloadAPI = (
+	input: DownloadInput | DownloadInputWithResumability
+): DownloadOutput | DownloadOutputWithResumability => {
 	const abortController = new AbortController();
 
-	const downloadTask = createDownloadTask({
-		job: downloadDataJob(input, abortController.signal),
-		onCancel: (abortErrorOverwrite?: Error) => {
-			abortController.abort(abortErrorOverwrite);
-		},
-	});
-	return downloadTask;
+	if (input.options?.resumable) {
+		const downloadTask = createDownloadTask({
+			job: downloadDataJob(input, abortController.signal),
+			onCancel: (abortErrorOverwrite?: Error) => {
+				abortController.abort(abortErrorOverwrite);
+			},
+		});
+		return downloadTask;
+	} else {
+		const downloadTask = createDownloadTask({
+			job: downloadDataJob(input, abortController.signal),
+			onCancel: (abortErrorOverwrite?: Error) => {
+				abortController.abort(abortErrorOverwrite);
+			},
+		});
+		return downloadTask;
+	}
 };
 
 const downloadDataJob =
 	(
-		{ options: downloadDataOptions, key }: DownloadInput,
+		{
+			options: downloadOptions,
+			key,
+			locationToDownload,
+		}: DownloadInputWithResumability,
 		abortSignal: AbortSignal
 	) =>
 	async () => {
 		const { bucket, keyPrefix, s3Config } = await resolveS3ConfigAndInput(
 			Amplify,
-			downloadDataOptions
+			downloadOptions
 		);
 		// TODO[AllanZhengYP]: support excludeSubPaths option to exclude sub paths
 		const finalKey = keyPrefix + key;
@@ -76,7 +104,7 @@ const downloadDataJob =
 			{
 				...s3Config,
 				abortSignal,
-				onDownloadProgress: downloadDataOptions?.onProgress,
+				onDownloadProgress: downloadOptions?.onProgress,
 			},
 			{
 				Bucket: bucket,

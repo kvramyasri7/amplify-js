@@ -29,7 +29,7 @@ export type StorageItem = {
 };
 
 export type StorageDownloadOutput<T extends StorageItem> = T & {
-	body: ResponseBodyMixin;
+	body?: ResponseBodyMixin;
 };
 
 export type StorageGetUrlOutput = {
