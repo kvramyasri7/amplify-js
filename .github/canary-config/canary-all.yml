@@ -275,13 +275,15 @@ tests:
     sample_name: [amplify-authenticator]
     spec: ui-amplify-authenticator
     browser: [chrome, firefox]
-  - test_name: integ_javascript_auth
-    desc: 'JavaScript Auth CDN'
-    framework: javascript
-    category: auth
-    sample_name: [auth-cdn]
-    spec: auth-cdn
-    browser: [chrome, firefox]
+    # we can un-comment when updated to v6
+    # see => https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html for more details.
+    # - test_name: integ_javascript_auth
+    #   desc: 'JavaScript Auth CDN'
+    #   framework: javascript
+    #   category: auth
+    #   sample_name: [auth-cdn]
+    #   spec: auth-cdn
+    #   browser: [chrome, firefox]
     amplifyjs_dir: true
   - test_name: integ_next_auth_authenticator_and_ssr_page
     desc: 'Authenticator and SSR page'
