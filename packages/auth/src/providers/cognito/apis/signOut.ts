@@ -60,20 +60,17 @@ export async function signOut(input?: SignOutInput): Promise<void> {
 	} catch (err) {
 		hasOAuthConfig = false;
 	}
+
 	if (hasOAuthConfig) {
 		const oAuthStore = new DefaultOAuthStore(defaultStorage);
 		oAuthStore.setAuthConfig(cognitoConfig);
-		const { type, error } =
-			(await handleOAuthSignOut(
-				cognitoConfig,
-				oAuthStore,
-				tokenOrchestrator,
-				input?.oauth?.preferredSignOutUrl,
-			)) ?? {};
+		const { type } =
+			(await handleOAuthSignOut(cognitoConfig, oAuthStore)) ?? {};
 		if (type === 'error') {
 			throw new AuthError({
 				name: OAUTH_SIGNOUT_EXCEPTION,
-				message: `An error occurred when attempting to log out from OAuth provider. ${error}`,
+				message:
+					'An error occurred when attempting to log out from OAuth provider.',
 			});
 		}
 	} else {

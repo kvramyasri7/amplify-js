@@ -47,7 +47,6 @@ describe('oAuthSignOutRedirect', () => {
 
 		expect(mockGetRedirectUrl).toHaveBeenCalledWith(
 			authConfig.loginWith.oauth.redirectSignOut,
-			undefined,
 		);
 		expect(mockOpenAuthSession).toHaveBeenCalledWith(
 			`https://${domain}/logout?client_id=${userPoolClientId}&logout_uri=${encodedSignOutRedirectUrl}`,
